@@ -1,0 +1,18 @@
+{
+    "manifest_version": 3,
+    "name": "Time Converter Extension",
+    "version": "1.0",
+    "description": "A simple time converting extension, that either converts time directly from a page or inputting a time zone to be converted.",
+    "icons": {
+        "16": "images/timeconverter-icon-16.png",
+        "32": "images/timeconverter-icon-32.png",
+        "48": "images/timeconverter-icon-48.png",
+        "128": "images/timeconverter-icon-128.png"
+    },
+    "action": {
+        "default_popup": "HTML/popup.html"
+    },
+    "permissions": [
+        "offscreen"
+    ]
+}
