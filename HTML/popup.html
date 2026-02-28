@@ -1,19 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <label for="timeZone">Time Zones: </label>
-    <select name="Time Zone" id="timeZone">
-        <option value="PST">PST (Pacific Standard Time) </option>
-        <option value="UTC">UTC (Universal Standard Time) </option>
-        <option value="PST">PST (Pacific Standard Time) </option>
-        <option value="PST">PST (Pacific Standard Time) </option>
-        <option value="PST">PST (Pacific Standard Time) </option>
-
-    </select>
-</body>
+<html>
+    <script src="/scripts/popup.js" defer></script>
+    <body>
+        <button id="getLocation">Get Location</button>
+        <p id="output"></p> 
+        <div id="timezone"></div>
+    </body>
 </html>
