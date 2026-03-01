@@ -1,6 +1,9 @@
-const ONE_HOUR = 60 * 60;
+const button = document.getElementById("getLocation");
+const timezoneDiv = document.getElementById("timezone");
 
-document.getElementById("getLocation").addEventListener("click", async () => {
+button.addEventListener("click", async () => {
+    button.classList.add("loading");
+    button.textContent = "Detecting...";
     try {
         const {latitude, longitude} = await getLocation();
         const {timezone_now, cached_lat, cached_lng} = await chrome.storage.sync.get(["timezone_now", "cached_lat", "cached_lng"]);
@@ -9,9 +12,7 @@ document.getElementById("getLocation").addEventListener("click", async () => {
 
         // if it is in storage and the same spot, then don't fetch
         if(timezone_now && isSameLocation) {
-            document.getElementById('timezone').textContent =
-                `Timezone: ${timezone_now.zoneName} (${timezone_now.abbreviation})`;
-
+            timeZoneFetchSuccessDesign(button, timezoneDiv, timezone_now);
             console.log("Loaded timezone from storage");
         } else {
             // fetch otherwise
@@ -22,20 +23,21 @@ document.getElementById("getLocation").addEventListener("click", async () => {
                 async (response) => {
                     if (response.success) {
                         const data = response.data;
-                        document.getElementById('timezone').textContent =
-                            `Timezone: ${data.zoneName} (${data.abbreviation})`;
                         // store it to storage
                         await chrome.storage.sync.set({ timezone_now: data, cached_lat: latitude, cached_lng: longitude})
+                        timeZoneFetchSuccessDesign(button, timezoneDiv, data);
                         console.log("Success");
                     } else {
                         console.error("Error fetching timezone:", response.error);
                     }
                 }
             );
-            
+
         }
 
     } catch (error) {
+        button.classList.remove("loading");
+        button.textContent = "Permission Denied";
         console.error(error)
     }
 });
@@ -55,4 +57,13 @@ function getLocation() {
             }
         );
     });
+}
+
+// success on timezone fetch
+function timeZoneFetchSuccessDesign(button, text, timezone) {
+    text.textContent = `Your Timezone: ${timezone.zoneName}`;
+    text.classList.add("success");
+
+    button.classList.remove("loading");
+    button.textContent = "Location Retrieved";
 }

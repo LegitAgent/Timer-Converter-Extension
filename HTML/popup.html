@@ -1,9 +1,26 @@
 <!DOCTYPE html>
 <html>
     <script src="/scripts/popup.js" defer></script>
+    <link rel="stylesheet" href="/CSS/popup.css">
     <body>
-        <button id="getLocation">Get Location</button>
-        <p id="output"></p> 
-        <div id="timezone"></div>
+    <div class="wrapper">
+        <div class="title">Convert Any Time</div>
+
+        <div class="section">
+            <label for="timeInput">Paste Time</label>
+            <textarea
+            id="timeInput"
+            placeholder="e.g. 12pm UTC, 18:30 GMT, March 5 3pm PST"
+            ></textarea>
+        </div>
+
+        <div class="section">
+            <button id="getLocation">Get My Location</button>
+        </div>
+
+        <div class="section">
+            <div id="timezone"></div>
+        </div>
+    </div>
     </body>
 </html>
