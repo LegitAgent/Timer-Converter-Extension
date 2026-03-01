@@ -7,6 +7,7 @@ document.getElementById("getLocation").addEventListener("click", async () => {
         chrome.runtime.sendMessage(
             {action: "getTimezone", latitude, longitude},
             (response) => {
+                console.log(response)
                 if (response.success) {
                     console.log("Timezone data:", response.data);
                     document.getElementById('timezone').textContent =
@@ -20,6 +21,7 @@ document.getElementById("getLocation").addEventListener("click", async () => {
         console.error(error)
     }
 });
+
 
 function getLocation() {
     return new Promise((resolve, reject) => {
