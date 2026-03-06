@@ -6,9 +6,9 @@ button.addEventListener("click", async () => {
     button.textContent = "Detecting...";
     try {
         const {latitude, longitude} = await getLocation();
-        const {timezone_now, cached_lat, cached_lng} = await chrome.storage.sync.get(["timezone_now", "cached_lat", "cached_lng"]);
+        const {timezone_now, cached_lat, cached_lng} = await chrome.storage.local.get(["timezone_now", "cached_lat", "cached_lng"]);
         
-        const isSameLocation = cached_lat !== undefined && cached_lng !== undefined && Math.abs(latitude - cached_lat) < 0.0001 && Math.abs(longitude - cached_lng) < 0.0001;
+        const isSameLocation = cached_lat !== undefined && cached_lng !== undefined && Math.abs(latitude - cached_lat) < 0.001 && Math.abs(longitude - cached_lng) < 0.001;
 
         // if it is in storage and the same spot, then don't fetch
         if(timezone_now && isSameLocation) {
@@ -20,11 +20,17 @@ button.addEventListener("click", async () => {
 
             chrome.runtime.sendMessage(
             {action: "getTimezone", latitude, longitude},
-                async (response) => {
-                    if (response.success) {
+                (response) => {
+                    if (chrome.runtime.lastError) {
+                            console.error("Message failed:", chrome.runtime.lastError);
+                            button.textContent = "Error";
+                            button.classList.remove("loading");
+                            return;
+                    }
+                    if (response && response.success) {
                         const data = response.data;
                         // store it to storage
-                        await chrome.storage.sync.set({ timezone_now: data, cached_lat: latitude, cached_lng: longitude})
+                        chrome.storage.local.set({ timezone_now: data, cached_lat: latitude, cached_lng: longitude});
                         timeZoneFetchSuccessDesign(button, timezoneDiv, data);
                         console.log("Success");
                     } else {
@@ -67,3 +73,19 @@ function timeZoneFetchSuccessDesign(button, text, timezone) {
     button.classList.remove("loading");
     button.textContent = "Location Retrieved";
 }
+
+const tabs = document.querySelectorAll(".navBtn");
+const contents = document.querySelectorAll(".tabContent");
+const slider = document.querySelector(".navSlider");
+const track = document.querySelector(".tabsTrack");
+
+tabs.forEach((btn, index) => {
+    btn.addEventListener("click", () => {
+        tabs.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        // animation
+        slider.style.transform = `translateX(${index * 100}%)`;
+        
+        track.style.transform = `translateX(-${index * 50}%)`;
+    })
+})
