@@ -180,5 +180,14 @@ button:hover {
   font-size: 0.85rem;
   background: rgba(34,197,94,0.08);
   border: 1px solid rgba(34,197,94,0.25);
+  text-align: center;
   color: #22c55e;
+}
+
+/* miscellaneous */
+.unselectable {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE 10+ and Edge */
+  user-select: none; /* Standard syntax */
 }

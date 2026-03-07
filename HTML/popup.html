@@ -10,18 +10,18 @@
 
 <div class="wrapper">
 
-    <div class="title">Convert Any Time</div>
+    <div class="title unselectable">Convert Any Time</div>
 
     <!-- NAV BAR -->
     <div class="nav">
 
         <div class="navSlider"></div>
 
-        <button class="navBtn active" data-tab="convert">
+        <button class="unselectable navBtn active" data-tab="convert">
             Convert Time
         </button>
         
-        <button class="navBtn" data-tab="detect">
+        <button class="unselectable navBtn" data-tab="detect">
             My Timezone
         </button>
 
@@ -40,11 +40,11 @@
 
                 <div class="section">
                     <label>Convert To</label>
-                    <input id="targetZone" placeholder="e.g. Asia/Tokyo, America/New_York">
+                    <textarea id="targetZone" placeholder="e.g. Asia/Tokyo, America/New_York"></textarea>
                 </div>
 
                 <div class="section">
-                    <button id="convertBtn">Convert</button>
+                    <button class="unselectable" id="convertBtn">Convert</button>
                 </div>
 
                 <div class="section">
@@ -57,7 +57,7 @@
             <div class="tabContent" id="detect">
 
                 <div class="section">
-                    <button id="getLocation">Get My Timezone</button>
+                    <button class="unselectable" id="getLocation">Get My Timezone</button>
                 </div>
 
                 <div class="section">
