@@ -34,13 +34,21 @@
             <div class="tabContent" id="convert">
 
                 <div class="section">
-                    <label for="timeInput">Paste Time</label>
-                    <textarea id="timeInput" placeholder="e.g. 12pm UTC, 18:30 GMT, March 5 3pm PST"></textarea>
+                    <label for="sourceZoneSearch">From Timezone</label>
+                    <div class="timezonePicker">
+                        <input type="text" id="sourceZoneSearch" placeholder="Search timezone..." autocomplete="off">
+                        <input type="hidden" id="sourceZone">
+                        <div class="timezoneList" id="sourceZoneList"></div>
+                    </div>
                 </div>
 
                 <div class="section">
-                    <label>Convert To</label>
-                    <textarea id="targetZone" placeholder="e.g. Asia/Tokyo, America/New_York"></textarea>
+                    <label for="targetZoneSearch">To Timezone</label>
+                    <div class="timezonePicker">
+                        <input type="text" id="targetZoneSearch" placeholder="Search timezone..." autocomplete="off">
+                        <input type="hidden" id="targetZone">
+                        <div class="timezoneList" id="targetZoneList"></div>
+                    </div>
                 </div>
 
                 <div class="section">

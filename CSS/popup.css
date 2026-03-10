@@ -172,6 +172,49 @@ button:hover {
   box-shadow: 0 6px 18px rgba(34,197,94,0.35);
 }
 
+.timezonePicker {
+  position: relative;
+  width: 100%;
+}
+
+.timezoneList {
+  margin-top: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: #1e293b;
+  display: none;
+}
+
+.timezoneList.show {
+  display: block;
+}
+
+.timezoneOption {
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: #e2e8f0;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.timezoneOption:last-child {
+  border-bottom: none;
+}
+
+.timezoneOption:hover,
+.timezoneOption.active {
+  background: rgba(34,197,94,0.12);
+  color: #22c55e;
+}
+
+.timezoneEmpty {
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
 /* ===== Outputs ===== */
 #timezone,
 #convertOutput {

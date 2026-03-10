@@ -1,10 +1,19 @@
+// notes: UPDATE ID FOR CORS POLICY PROTECTION
 const DOM = {
     locationButton: document.getElementById("getLocation"),
     timezoneDiv: document.getElementById("timezone"),
     textAreas: document.querySelectorAll("textarea"),
     tabs: document.querySelectorAll(".navBtn"),
     slider: document.querySelector(".navSlider"),
-    track: document.querySelector(".tabsTrack")
+    track: document.querySelector(".tabsTrack"),
+
+    sourceZoneInput: document.getElementById("sourceZoneSearch"),
+    sourceZoneValue: document.getElementById("sourceZone"),
+    sourceZoneList: document.getElementById("sourceZoneList"),
+
+    targetZoneInput: document.getElementById("targetZoneSearch"),
+    targetZoneValue: document.getElementById("targetZone"),
+    targetZoneList: document.getElementById("targetZoneList")
 };
 
 /**
@@ -16,51 +25,56 @@ const storage = {
     set: (data) => new Promise((response) => chrome.storage.local.set(data, response))
 };
 
-/**
+/******************
  * STATE MANAGEMENT
- */
-async function savePopupState() {
-    const activeTab = document.querySelector(".navBtn.active")?.dataset.tab;
-    const textAreaData = {};
-    
-    DOM.textAreas.forEach(el => textAreaData[el.id] = el.value);
+ ******************/
 
-    await storage.set({
-        popupState: {
-            tab: activeTab,
-            textAreas: textAreaData,
-            timezoneOut: DOM.timezoneDiv.textContent
-        }
-    });
+async function savePopupState() {
+    try {
+        const activeTab = document.querySelector(".navBtn.active")?.dataset.tab;
+        const textAreaData = {};
+        DOM.textAreas.forEach(el => textAreaData[el.id] = el.value);
+        await storage.set({
+            popupState: {
+                tab: activeTab,
+                textAreas: textAreaData,
+                timezoneOut: DOM.timezoneDiv.textContent
+            }
+        });
+    } catch(error) {
+        console.error("Failed to save popup state:", error);
+    }
 }
 
 async function restoreState() {
-    const { popupState } = await storage.get("popupState");
-    if (!popupState) return;
+    try {
+        const { popupState } = await storage.get("popupState");
+        if (!popupState) return;
 
-    // restore text Areas
-    if (popupState.textAreas) {
-        Object.entries(popupState.textAreas).forEach(([id, value]) => {
-            const el = document.getElementById(id);
-            if (el) el.value = value;
-        });
-    }
+        if (popupState.textAreas) {
+            Object.entries(popupState.textAreas).forEach(([id, value]) => {
+                const el = document.getElementById(id);
+                if (el) el.value = value;
+            });
+        }
 
-    // testore timezone Text
-    if (popupState.timezoneOut) {
-        DOM.timezoneDiv.textContent = popupState.timezoneOut;
-    }
+        if (popupState.timezoneOut) {
+            DOM.timezoneDiv.textContent = popupState.timezoneOut;
+        }
 
-    // restore active tab
-    if (popupState.tab) {
-        const savedTabBtn = document.querySelector(`.navBtn[data-tab="${popupState.tab}"]`);
-        savedTabBtn?.click(); // ? = does it exist (is it null)
+        if (popupState.tab) {
+            const savedTabBtn = document.querySelector(`.navBtn[data-tab="${popupState.tab}"]`);
+            savedTabBtn?.click();
+        }
+    } catch(error) {
+        console.error("Failed to restore state:", error);
     }
 }
 
 /**
  * GEOLOCATION & API LOGIC
  */
+
 function getLocation() {
     return new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(
@@ -79,38 +93,79 @@ async function handleLocationRequest() {
         const { timezone_now, cached_lat, cached_lng } = await storage.get(["timezone_now", "cached_lat", "cached_lng"]);
 
         // check if user is in the same spot (approx 100m)
-        const isSameLocation = cached_lat !== undefined && 
+        const isSameLocation = cached_lat !== undefined &&
                                cached_lng !== undefined &&
-                               Math.abs(latitude - cached_lat) < 0.001 && 
+                               Math.abs(latitude - cached_lat) < 0.001 &&
                                Math.abs(longitude - cached_lng) < 0.001;
 
         if (timezone_now && isSameLocation) {
             applyTimezoneUI(timezone_now);
-            console.log("Loaded from cache");
+            console.log("Loaded time zone from cache");
         } else {
             console.log("Fetching from server...");
-            fetchTimezone(latitude, longitude);
-            console.log("Fetched successfully");
+            const data = await fetchTimezone(latitude, longitude);
+            applyTimezoneUI(data);
         }
     } catch (error) {
         DOM.locationButton.classList.remove("loading");
-        DOM.locationButton.textContent = "Permission Denied";
+        DOM.locationButton.textContent = "Error";
         console.error(error);
     }
 }
 
-function fetchTimezone(latitude, longitude) {
-    chrome.runtime.sendMessage({ action: "getTimezone", latitude, longitude }, (response) => {
-        if (chrome.runtime.lastError || !response?.success) { // null or err
-            console.error("Fetch failed:", chrome.runtime.lastError || response?.error);
-            DOM.locationButton.textContent = "Error";
-            DOM.locationButton.classList.remove("loading");
-            return;
+async function handleTimezoneListRequest() {
+    try {
+        let { timezone_list } = await storage.get("timezone_list");
+        if (timezone_list != null) {
+            console.log("Loaded time zone list from cache");
+        } else {
+            console.log("Fetching Timezone List from server");
+            timezone_list = await fetchTimezoneList();
         }
 
-        const data = response.data;
-        storage.set({ timezone_now: data, cached_lat: latitude, cached_lng: longitude });
-        applyTimezoneUI(data);
+        // API returns { status: "OK", message: "", zones: [...] }, unwrap the array
+        const list = Array.isArray(timezone_list) // is it a plain array?
+            ? timezone_list                       // if so, return time list
+            : (timezone_list?.zones ?? []);       // if not, return the list zones array
+
+        initCustomDropdowns(list);
+    } catch(error) {
+        console.error(error);
+    }
+}
+
+// FETCHES
+
+function fetchTimezone(latitude, longitude) {
+    return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ action: "getTimezone", latitude, longitude }, (response) => {
+            if (chrome.runtime.lastError || !response?.success) {
+                console.error("Fetch failed: ", chrome.runtime.lastError || response?.error);
+                DOM.locationButton.textContent = "Error";
+                DOM.locationButton.classList.remove("loading");
+                reject(chrome.runtime.lastError || new Error(response?.error || "Unknown error"));
+                return;
+            }
+            const data = response.data;
+            storage.set({ timezone_now: data, cached_lat: latitude, cached_lng: longitude });
+            console.log("Fetched successfully");
+            resolve(data);
+        });
+    });
+}
+
+function fetchTimezoneList() {
+    return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ action: "getTimezoneList" }, (response) => {
+            if (chrome.runtime.lastError || !response?.success) {
+                console.error("Fetch failed: ", chrome.runtime.lastError || response?.error);
+                reject(chrome.runtime.lastError || new Error(response?.error || "Unknown error"));
+                return;
+            }
+            const data = response.data;
+            storage.set({ timezone_list: data });
+            resolve(data);
+        });
     });
 }
 
@@ -125,16 +180,223 @@ function applyTimezoneUI(timezone) {
     savePopupState();
 }
 
+function initCustomDropdowns(timezones) {
+    if (timezones.length === 0) {
+        console.error("initCustomDropdowns: received no timezones", timezones);
+        return;
+    }
+
+    // sort alphabetically
+    const normalizedTimezones = [];
+
+    // check if any empty or null strings
+    for (const tz of timezones) {
+        const zone = tz.zoneName;
+        const country = tz.countryName;
+        // grab last slash, pop everything before and replace every _ with a space.
+        const city = zone.split("/").pop().replace(/_/g, " ");
+
+        normalizedTimezones.push(`${city}, ${country}`);
+    }
+    normalizedTimezones.sort((a, b) => a.localeCompare(b)); // sort normalized timezones, localeCompare for special characters
+
+    console.log(`Dropdowns ready: ${normalizedTimezones.length} timezones`);
+
+    setupTimezonePicker(DOM.sourceZoneInput, DOM.sourceZoneValue, DOM.sourceZoneList, normalizedTimezones);
+    setupTimezonePicker(DOM.targetZoneInput, DOM.targetZoneValue, DOM.targetZoneList, normalizedTimezones);
+}
+
+/**
+ * FUZZY / NEAREST-MATCH SEARCH
+ * Scoring priority (highest → lowest):
+ *   1. Exact match
+ *   2. Starts with query
+ *   3. A segment (after / or _) starts with query
+ *   4. Contains query as a substring
+ *   5. Levenshtein distance on the closest segment (catches typos)
+ */
+function fuzzySearchTimezones(timezones, query) {
+    if (!query) return timezones; // empty → full alphabetical list
+
+    const q = query.toLowerCase();
+
+    // minimum num of edits needed to turn one string to another
+    // https://www.geeksforgeeks.org/dsa/introduction-to-levenshtein-distance/
+    function levenshtein(str1, str2) {
+        const m = str1.length;
+        const n = str2.length;
+        // Initialize two arrays to represent the matrix rows
+        let prevRow = new Array(n + 1).fill(0); // + 1 for empty string start
+        let currRow = new Array(n + 1).fill(0);
+        // cost of "" → "cut", one insertion per character, so just 0, 1, ... , n
+        for (let j = 0; j <= n; j++) {
+            prevRow[j] = j;
+        }
+        // Dynamic programming to fill the matrix
+        for (let i = 1; i <= m; i++) {
+            currRow[0] = i;
+            /**
+             * c === c → diagonal = dp[0][0] = 0
+             * c !== c → 1 + min(left, above, diag) = 1
+             */
+            for (let j = 1; j <= n; j++) {
+                // Check if characters at the current positions are equal
+                if (str1[i - 1] === str2[j - 1]) {
+                    currRow[j] = prevRow[j - 1]; // No operation required
+                } else {
+                    // Choose the minimum of three possible operations (insert, remove, replace)
+                    currRow[j] = 1 + Math.min(
+                        currRow[j - 1],   // Insert
+                        prevRow[j],       // Remove
+                        prevRow[j - 1]    // Replace
+                    );
+                }
+            }
+            // Update the previous row with the current row for the next iteration
+            for(let j = 0; j <= n; j++) {
+                prevRow[j] = currRow[j];
+            }
+        }
+        // The result is the value at the bottom-right corner of the matrix
+        return currRow[n];
+    }
+
+    /**
+     * get segments of each timezone and compare it to the query, return min
+     */ 
+    function bestSegmentDistance(tz, q) {
+        return Math.min(...tz.toLowerCase().split(/[/_]/).map(seg => levenshtein(seg, q)));
+    }
+
+    /**
+     * 
+     * @param {String} tz : timezone
+     * @returns 
+     */
+    function score(tz) {
+        const lower = tz.toLowerCase();
+        const segments = lower.split(/[/_]/);
+
+        if (lower === q) return 0; // if the timezone is the query
+        if (lower.startsWith(q)) return 1; // if the timezone literally starts with the query
+        if (segments.some(s => s.startsWith(q))) return 2; // if any of the segments start with the query, separated by / or _
+        if (lower.includes(q)) return 3; // if it even just includes the query
+
+        const dist = bestSegmentDistance(tz, q); // if neither of those, then get segment distance from query via levenshtein algo
+        const threshold = Math.max(2, Math.floor(q.length / 2)); // determines tolerance of the queries, longer the more tolerance
+        if (dist <= threshold) return 4 + dist; // if within tolerance, then return 4 (lower prio) + the distance
+
+        return Infinity; // else, its too far
+    }
+
+    // pipeline to score timezones
+    return timezones
+        .map(tz => ({ tz, s: score(tz) })) // attach a score to each timezone
+        .filter(({ s }) => s < Infinity) // removes timezones that are beyond tolerance
+        .sort((a, b) => a.s !== b.s ? a.s - b.s : a.tz.localeCompare(b.tz)) // sort by score, lower = better, if equal, sort by alphabetical
+        .map(({ tz }) => tz); // extract the timezone strings from the objects
+}
+
+function setupTimezonePicker(inputEl, hiddenEl, listEl, timezones) {
+    let filtered = [...timezones];
+    let activeIndex = -1;
+
+    function renderList(items) {
+        listEl.innerHTML = ""; // clear
+
+        if (items.length === 0) {
+            listEl.innerHTML = `<div class="timezoneEmpty">No matching timezones</div>`;
+            listEl.classList.add("show");
+            return;
+        }
+
+        items.forEach((tz, index) => {
+            const option = document.createElement("div");
+            option.className = "timezoneOption";
+
+            const query = inputEl.value.trim(); // user input
+            if (query) { // highlight
+                const lower = tz.toLowerCase();
+                const idx = lower.indexOf(query.toLowerCase());
+                if (idx !== -1) {
+                    option.innerHTML =
+                        tz.slice(0, idx) +
+                        `<mark>${tz.slice(idx, idx + query.length)}</mark>` +
+                        tz.slice(idx + query.length);
+                } else {
+                    option.textContent = tz;
+                }
+            } else {
+                option.textContent = tz;
+            }
+
+            if (index === activeIndex) option.classList.add("active");
+            option.addEventListener("click", () => selectTimezone(tz));
+            listEl.appendChild(option);
+        });
+
+        listEl.classList.add("show");
+    }
+
+    function selectTimezone(tz) {
+        inputEl.value = tz;
+        hiddenEl.value = tz;
+        listEl.classList.remove("show");
+        activeIndex = -1;
+        savePopupState();
+    }
+
+    inputEl.addEventListener("focus", () => {
+        setTimeout(() => {
+            filtered = fuzzySearchTimezones(timezones, inputEl.value.trim());
+            renderList(filtered);
+        }, 100); // timer for 100ms to reduce twitching of the popup
+    });
+
+    inputEl.addEventListener("input", () => {
+        hiddenEl.value = "";
+        activeIndex = -1;
+        filtered = fuzzySearchTimezones(timezones, inputEl.value.trim());
+        renderList(filtered);
+        savePopupState();
+    });
+
+    inputEl.addEventListener("keydown", (event) => {
+        if (!listEl.classList.contains("show")) return;
+
+        if (event.key === "ArrowDown") {
+            event.preventDefault();
+            activeIndex = Math.min(activeIndex + 1, filtered.length - 1);
+            renderList(filtered);
+            listEl.querySelector(".timezoneOption.active")?.scrollIntoView({ block: "nearest" });
+        }
+        if (event.key === "ArrowUp") {
+            event.preventDefault();
+            activeIndex = Math.max(activeIndex - 1, 0);
+            renderList(filtered);
+            listEl.querySelector(".timezoneOption.active")?.scrollIntoView({ block: "nearest" });
+        }
+        if (event.key === "Enter") {
+            event.preventDefault();
+            if (filtered[activeIndex]) selectTimezone(filtered[activeIndex]);
+        }
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!inputEl.contains(event.target) && !listEl.contains(event.target)) {
+            listEl.classList.remove("show");
+            activeIndex = -1;
+        }
+    });
+}
+
 function init() {
-    // tab switching logic
     DOM.tabs.forEach((btn, index) => {
         btn.addEventListener("click", () => {
             DOM.tabs.forEach(b => b.classList.remove("active"));
             btn.classList.add("active");
-            
-            DOM.slider.style.transform = `translateX(${index * 100}%)`; // navbar switch
-            DOM.track.style.transform = `translateX(-${index * 50}%)`; // tab content switch
-            
+            DOM.slider.style.transform = `translateX(${index * 100}%)`;
+            DOM.track.style.transform = `translateX(-${index * 50}%)`;
             savePopupState();
         });
     });
@@ -142,6 +404,7 @@ function init() {
     DOM.textAreas.forEach(el => el.addEventListener("input", savePopupState));
     DOM.locationButton.addEventListener("click", handleLocationRequest);
 
+    handleTimezoneListRequest();
     restoreState();
 }
 
