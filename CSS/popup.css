@@ -179,7 +179,7 @@ button:hover {
 
 .timezoneList {
   margin-top: 6px;
-  max-height: 160px;
+  max-height: 120px;
   overflow-y: auto;
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.08);
@@ -213,6 +213,52 @@ button:hover {
   padding: 10px 12px;
   font-size: 0.85rem;
   color: #94a3b8;
+}
+
+.standardTimeInput {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.time-picker-select {
+  flex: 1;
+  padding: 9px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* smaller width for AM PM */
+#ampmSelector {
+  flex: 0.6;
+}
+
+.time-picker-select:hover {
+  border-color: rgba(255,255,255,0.18);
+}
+
+.time-picker-select:focus {
+  border-color: rgba(34,197,94,0.4);
+  box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
+}
+
+.time-separator {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+/* dropdown menu */
+.time-picker-select option {
+  background: #1e293b;
+  color: #e2e8f0;
 }
 
 /* ===== Outputs ===== */

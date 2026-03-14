@@ -13,7 +13,14 @@ const DOM = {
 
     targetZoneInput: document.getElementById("targetZoneSearch"),
     targetZoneValue: document.getElementById("targetZone"),
-    targetZoneList: document.getElementById("targetZoneList")
+    targetZoneList: document.getElementById("targetZoneList"),
+    
+    hourPicker: document.getElementById("hourSelector"),
+    minutePicker: document.getElementById("minuteSelector"),
+    ampmPicker: document.getElementById("ampmSelector"),
+
+    convertButton: document.getElementById("convertBtn"),
+    convertOutput: document.getElementById("convertOutput")
 };
 
 /**
@@ -34,11 +41,19 @@ async function savePopupState() {
         const activeTab = document.querySelector(".navBtn.active")?.dataset.tab;
         const textAreaData = {};
         DOM.textAreas.forEach(el => textAreaData[el.id] = el.value);
+        
         await storage.set({
             popupState: {
                 tab: activeTab,
                 textAreas: textAreaData,
-                timezoneOut: DOM.timezoneDiv.textContent
+                timezoneOut: DOM.timezoneDiv.textContent,
+                cachedSourceZoneInput: DOM.sourceZoneInput.value,
+                cachedSourceZoneValue: DOM.sourceZoneValue.value,
+                cachedTargetZoneInput: DOM.targetZoneInput.value,
+                cachedTargetZoneValue: DOM.targetZoneValue.value,
+                cachedHour: DOM.hourPicker.value,
+                cachedMinute: DOM.minutePicker.value,
+                cachedAMPM: DOM.ampmPicker.value
             }
         });
     } catch(error) {
@@ -58,6 +73,22 @@ async function restoreState() {
             });
         }
 
+        if(popupState.cachedSourceZoneInput && popupState.cachedSourceZoneValue) {
+            DOM.sourceZoneInput.value = popupState.cachedSourceZoneInput;
+            DOM.sourceZoneValue.value = popupState.cachedSourceZoneValue;
+        }
+
+        if(popupState.cachedTargetZoneInput && popupState.cachedTargetZoneValue) {
+            DOM.targetZoneInput.value = popupState.cachedTargetZoneInput;
+            DOM.targetZoneValue.value = popupState.cachedTargetZoneValue;
+        }
+
+        if(popupState.cachedHour && popupState.cachedMinute && popupState.cachedAMPM) {
+            DOM.hourPicker.value = popupState.cachedHour;
+            DOM.minutePicker.value = popupState.cachedMinute;
+            DOM.ampmPicker.value = popupState.cachedAMPM;
+        }
+
         if (popupState.timezoneOut) {
             DOM.timezoneDiv.textContent = popupState.timezoneOut;
         }
@@ -66,6 +97,7 @@ async function restoreState() {
             const savedTabBtn = document.querySelector(`.navBtn[data-tab="${popupState.tab}"]`);
             savedTabBtn?.click();
         }
+
     } catch(error) {
         console.error("Failed to restore state:", error);
     }
@@ -124,9 +156,7 @@ async function handleTimezoneListRequest() {
         }
 
         // API returns { status: "OK", message: "", zones: [...] }, unwrap the array
-        const list = Array.isArray(timezone_list) // is it a plain array?
-            ? timezone_list                       // if so, return time list
-            : (timezone_list?.zones ?? []);       // if not, return the list zones array
+        const list = timezone_list?.zones ?? [];
 
         initCustomDropdowns(list);
     } catch(error) {
@@ -196,9 +226,9 @@ function initCustomDropdowns(timezones) {
         // grab last slash, pop everything before and replace every _ with a space.
         const city = zone.split("/").pop().replace(/_/g, " ");
 
-        normalizedTimezones.push(`${city}, ${country}`);
+        normalizedTimezones.push({label: `${city}, ${country}`, value: tz});
     }
-    normalizedTimezones.sort((a, b) => a.localeCompare(b)); // sort normalized timezones, localeCompare for special characters
+    normalizedTimezones.sort((a, b) => a.label.localeCompare(b.label)); // sort normalized timezones, localeCompare for special characters
 
     console.log(`Dropdowns ready: ${normalizedTimezones.length} timezones`);
 
@@ -234,7 +264,7 @@ function fuzzySearchTimezones(timezones, query) {
         }
         // Dynamic programming to fill the matrix
         for (let i = 1; i <= m; i++) {
-            currRow[0] = i;
+            currRow[0] = i; // fill first column
             /**
              * c === c → diagonal = dp[0][0] = 0
              * c !== c → 1 + min(left, above, diag) = 1
@@ -246,9 +276,9 @@ function fuzzySearchTimezones(timezones, query) {
                 } else {
                     // Choose the minimum of three possible operations (insert, remove, replace)
                     currRow[j] = 1 + Math.min(
-                        currRow[j - 1],   // Insert
-                        prevRow[j],       // Remove
-                        prevRow[j - 1]    // Replace
+                        currRow[j - 1],   // Insert (left)
+                        prevRow[j],       // Remove (up)
+                        prevRow[j - 1]    // Replace (diag)
                     );
                 }
             }
@@ -269,9 +299,9 @@ function fuzzySearchTimezones(timezones, query) {
     }
 
     /**
-     * 
+     * calculates the score of a timezone compared a query using the levenshtein algorithm
      * @param {String} tz : timezone
-     * @returns 
+     * @returns score of a timezone against a query
      */
     function score(tz) {
         const lower = tz.toLowerCase();
@@ -291,9 +321,9 @@ function fuzzySearchTimezones(timezones, query) {
 
     // pipeline to score timezones
     return timezones
-        .map(tz => ({ tz, s: score(tz) })) // attach a score to each timezone
+        .map(tz => ({ tz, s: score(tz.label) })) // attach a score to each timezone
         .filter(({ s }) => s < Infinity) // removes timezones that are beyond tolerance
-        .sort((a, b) => a.s !== b.s ? a.s - b.s : a.tz.localeCompare(b.tz)) // sort by score, lower = better, if equal, sort by alphabetical
+        .sort((a, b) => a.s !== b.s ? a.s - b.s : a.tz.label.localeCompare(b.tz.label)) // sort by score, lower = better, if equal, sort by alphabetical
         .map(({ tz }) => tz); // extract the timezone strings from the objects
 }
 
@@ -310,7 +340,8 @@ function setupTimezonePicker(inputEl, hiddenEl, listEl, timezones) {
             return;
         }
 
-        items.forEach((tz, index) => {
+        items.forEach((tzObj, index) => {
+            const tz = tzObj.label;
             const option = document.createElement("div");
             option.className = "timezoneOption";
 
@@ -330,8 +361,8 @@ function setupTimezonePicker(inputEl, hiddenEl, listEl, timezones) {
                 option.textContent = tz;
             }
 
-            if (index === activeIndex) option.classList.add("active");
-            option.addEventListener("click", () => selectTimezone(tz));
+            if (index === activeIndex) option.classList.add("active"); // add green hue
+            option.addEventListener("click", () => selectTimezone(tzObj));
             listEl.appendChild(option);
         });
 
@@ -339,8 +370,9 @@ function setupTimezonePicker(inputEl, hiddenEl, listEl, timezones) {
     }
 
     function selectTimezone(tz) {
-        inputEl.value = tz;
-        hiddenEl.value = tz;
+        inputEl.value = tz.label;
+        hiddenEl.value = JSON.stringify(tz.value);
+        console.log(tz.value);
         listEl.classList.remove("show");
         activeIndex = -1;
         savePopupState();
@@ -390,6 +422,38 @@ function setupTimezonePicker(inputEl, hiddenEl, listEl, timezones) {
     });
 }
 
+function setupTimePickerOptions() {
+    // hours
+    for(let i = 1; i <= 12; i++) {
+        if(i < 10) {
+            DOM.hourPicker.innerHTML += `<option> 0${i} </option>`
+        } else {
+            DOM.hourPicker.innerHTML += `<option> ${i} </option>`
+        }
+    }
+    // minutes
+    for(let i = 0; i < 60; i+= 5) {
+        if(i < 10) {
+            DOM.minutePicker.innerHTML += `<option> 0${i} </option>`
+        } else {
+            DOM.minutePicker.innerHTML += `<option> ${i} </option>`
+        }
+    }
+}
+
+function convertTime() {
+    let hour = DOM.hourPicker.value;
+    const minute = DOM.minutePicker.value;
+    const ampm = DOM.ampmPicker.value;
+
+    const source = JSON.parse(DOM.sourceZoneValue.value);
+    const target = JSON.parse(DOM.targetZoneValue.value);
+
+    let gmtOffset = (source.gmtOffset - target.gmtOffset) / 3600;
+    console.log(source.dst);
+    console.log(target.dst);
+}
+
 function init() {
     DOM.tabs.forEach((btn, index) => {
         btn.addEventListener("click", () => {
@@ -403,6 +467,14 @@ function init() {
 
     DOM.textAreas.forEach(el => el.addEventListener("input", savePopupState));
     DOM.locationButton.addEventListener("click", handleLocationRequest);
+
+    DOM.hourPicker.addEventListener("change", savePopupState);
+    DOM.minutePicker.addEventListener("change", savePopupState);
+    DOM.ampmPicker.addEventListener("change", savePopupState);
+
+    DOM.convertButton.addEventListener("click", convertTime)
+
+    setupTimePickerOptions();
 
     handleTimezoneListRequest();
     restoreState();

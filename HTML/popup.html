@@ -33,11 +33,32 @@
             <!-- CONVERT TIME SECTION -->
             <div class="tabContent" id="convert">
 
+            <div class="section">
+                <label for="timeInput">Input Time</label>
+
+                <div class="standardTimeInput">
+                    <select class="time-picker-select" id="hourSelector">
+                        <!-- AUTO GENERATE -->
+                    </select>
+
+                    <span class="time-separator">:</span>
+
+                    <select class="time-picker-select" id="minuteSelector">
+                        <!-- AUTO GENERATE -->
+                    </select>
+
+                    <select class="time-picker-select" id="ampmSelector">
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                    </select>
+                </div>
+            </div>
+
                 <div class="section">
                     <label for="sourceZoneSearch">From Timezone</label>
                     <div class="timezonePicker">
                         <input type="text" id="sourceZoneSearch" placeholder="Search timezone..." autocomplete="off">
-                        <input type="hidden" id="sourceZone">
+                        <input type="hidden" id="sourceZone"> <!-- actual API value -->
                         <div class="timezoneList" id="sourceZoneList"></div>
                     </div>
                 </div>
@@ -46,7 +67,7 @@
                     <label for="targetZoneSearch">To Timezone</label>
                     <div class="timezonePicker">
                         <input type="text" id="targetZoneSearch" placeholder="Search timezone..." autocomplete="off">
-                        <input type="hidden" id="targetZone">
+                        <input type="hidden" id="targetZone"> 
                         <div class="timezoneList" id="targetZoneList"></div>
                     </div>
                 </div>
