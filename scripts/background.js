@@ -6,6 +6,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     } else if (msg.action === "getTimezoneList") {
         url = `https://timezone-server.onrender.com/listtimezones`
     } else {
+        sendResponse({ success: false, error: "Unknown action" });
         return;
     }
     fetch(url) // GET

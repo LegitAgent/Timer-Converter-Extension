@@ -27,9 +27,14 @@ const DOM = {
  * STORAGE HELPERS
  * Promisifying chrome.storage makes async/await logic much cleaner.
  */
-const storage = {
+const storageLocal = {
     get: (keys) => new Promise((response) => chrome.storage.local.get(keys, response)),
     set: (data) => new Promise((response) => chrome.storage.local.set(data, response))
+};
+
+const storageSession = {
+    get: (keys) => new Promise((response) => chrome.storage.session.get(keys, response)),
+    set: (data) => new Promise((response) => chrome.storage.session.set(data, response))
 };
 
 /******************
@@ -42,7 +47,7 @@ async function savePopupState() {
         const textAreaData = {};
         DOM.textAreas.forEach(el => textAreaData[el.id] = el.value);
         
-        await storage.set({
+        await storageLocal.set({
             popupState: {
                 tab: activeTab,
                 textAreas: textAreaData,
@@ -63,7 +68,7 @@ async function savePopupState() {
 
 async function restoreState() {
     try {
-        const { popupState } = await storage.get("popupState");
+        const { popupState } = await storageLocal.get("popupState");
         if (!popupState) return;
 
         if (popupState.textAreas) {
@@ -122,7 +127,7 @@ async function handleLocationRequest() {
 
     try {
         const { latitude, longitude } = await getLocation();
-        const { timezone_now, cached_lat, cached_lng } = await storage.get(["timezone_now", "cached_lat", "cached_lng"]);
+        const { timezone_now, cached_lat, cached_lng } = await storageLocal.get(["timezone_now", "cached_lat", "cached_lng"]);
 
         // check if user is in the same spot (approx 100m)
         const isSameLocation = cached_lat !== undefined &&
@@ -147,7 +152,7 @@ async function handleLocationRequest() {
 
 async function handleTimezoneListRequest() {
     try {
-        let { timezone_list } = await storage.get("timezone_list");
+        let { timezone_list } = await storageSession.get("timezone_list");
         if (timezone_list != null) {
             console.log("Loaded time zone list from cache");
         } else {
@@ -177,7 +182,7 @@ function fetchTimezone(latitude, longitude) {
                 return;
             }
             const data = response.data;
-            storage.set({ timezone_now: data, cached_lat: latitude, cached_lng: longitude });
+            storageLocal.set({ timezone_now: data, cached_lat: latitude, cached_lng: longitude });
             console.log("Fetched successfully");
             resolve(data);
         });
@@ -193,7 +198,7 @@ function fetchTimezoneList() {
                 return;
             }
             const data = response.data;
-            storage.set({ timezone_list: data });
+            storageSession.set({ timezone_list: data });
             resolve(data);
         });
     });
@@ -372,7 +377,6 @@ function setupTimezonePicker(inputEl, hiddenEl, listEl, timezones) {
     function selectTimezone(tz) {
         inputEl.value = tz.label;
         hiddenEl.value = JSON.stringify(tz.value);
-        console.log(tz.value);
         listEl.classList.remove("show");
         activeIndex = -1;
         savePopupState();
@@ -441,17 +445,65 @@ function setupTimePickerOptions() {
     }
 }
 
+// limitation: if you convert time at exactly where DST is affected and you did not quit/restart the extension session, it will still presume DST and vice versa.
 function convertTime() {
-    let hour = DOM.hourPicker.value;
-    const minute = DOM.minutePicker.value;
-    const ampm = DOM.ampmPicker.value;
+    try {
+        // ensure zones are selected
+        if (!DOM.sourceZoneValue.value || !DOM.targetZoneValue.value) {
+            DOM.convertOutput.textContent = "Please select both timezones.";
+            return;
+        }
 
-    const source = JSON.parse(DOM.sourceZoneValue.value);
-    const target = JSON.parse(DOM.targetZoneValue.value);
+        // parse inputs
+        const sourceData = JSON.parse(DOM.sourceZoneValue.value);
+        const targetData = JSON.parse(DOM.targetZoneValue.value);
+        let hour = Number(DOM.hourPicker.value);
+        const minute = Number(DOM.minutePicker.value);
 
-    let gmtOffset = (source.gmtOffset - target.gmtOffset) / 3600;
-    console.log(source.dst);
-    console.log(target.dst);
+        // normalize to 24-hour minutes (0 to 1439)
+        if (DOM.ampmPicker.value === "PM" && hour !== 12) hour += 12;
+        if (DOM.ampmPicker.value === "AM" && hour === 12) hour = 0;
+        
+        let currentTotalMinutes = (hour * 60) + minute;
+
+        // calculate offset (gmtOffset is usually in seconds, convert to minutes)
+        const offsetDiffMinutes = (targetData.gmtOffset - sourceData.gmtOffset) / 60;
+        let targetTotalMinutes = currentTotalMinutes + offsetDiffMinutes;
+
+        // determine Day Shift (-1, 0, or 1)
+        // Math.floor handles negative numbers correctly for 'previous day'
+        const dayShift = Math.floor(targetTotalMinutes / 1440);
+        const dayLabels = { "-1": " (previous day)", "0": "", "1": " (next day)" };
+
+        // wrap minutes to stay within a 24-hour loop (0-1439)
+        const finalMinutes = ((targetTotalMinutes % 1440) + 1440) % 1440;
+
+        // format Output (12-hour clock)
+        const h24 = Math.floor(finalMinutes / 60);
+        const m = String(finalMinutes % 60).padStart(2, "0");
+        const ampm = h24 >= 12 ? "PM" : "AM";
+        const h12 = (h24 % 12) || 12; // If 0, result is 12
+
+        let UTCDisplacementSource = sourceData.gmtOffset / 3600;
+        let UTCDisplacementTarget = targetData.gmtOffset / 3600;
+
+        if(UTCDisplacementSource > 0) {
+            UTCDisplacementSource = "+" + UTCDisplacementSource;
+        }
+        if(UTCDisplacementTarget > 0) {
+            UTCDisplacementTarget = "+" + UTCDisplacementTarget;
+        }
+
+        DOM.convertOutput.innerHTML = `From: UTC${UTCDisplacementSource} to UTC${UTCDisplacementTarget} <br> ${h12}:${m} ${ampm}${dayLabels[dayShift] || ""}`;
+
+    } catch (err) {
+        console.error("Conversion failed:", err);
+        DOM.convertOutput.textContent = "Error parsing timezone data.";
+    }
+}
+
+function covertPastedTime() {
+    
 }
 
 function init() {
