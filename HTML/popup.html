@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <script src="/scripts/popup.js" defer></script>
+    <script type="module" src="/scripts/popup.js" defer></script>
     <link rel="stylesheet" href="/CSS/popup.css">
 </head>
 
@@ -33,32 +33,37 @@
             <!-- CONVERT TIME SECTION -->
             <div class="tabContent" id="convert">
 
-            <div class="section">
-                <label for="timeInput">Input Time</label>
+                <div class="section">
+                    <label for="timeInput">Input Time</label>
 
-                <div class="standardTimeInput">
-                    <select class="time-picker-select" id="hourSelector">
-                        <!-- AUTO GENERATE -->
-                    </select>
+                    <div class="standardTimeInput">
+                        <select class="time-picker-select" id="hourSelector">
+                            <!-- AUTO GENERATE -->
+                        </select>
 
-                    <span class="time-separator">:</span>
+                        <span class="time-separator">:</span>
 
-                    <select class="time-picker-select" id="minuteSelector">
-                        <!-- AUTO GENERATE -->
-                    </select>
+                        <select class="time-picker-select" id="minuteSelector">
+                            <!-- AUTO GENERATE -->
+                        </select>
 
-                    <select class="time-picker-select" id="ampmSelector">
-                        <option value="AM">AM</option>
-                        <option value="PM">PM</option>
-                    </select>
+                        <select class="time-picker-select" id="ampmSelector">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
 
                 <div class="section">
                     <label for="sourceZoneSearch">From Timezone</label>
                     <div class="timezonePicker">
-                        <input type="text" id="sourceZoneSearch" placeholder="Search timezone..." autocomplete="off">
-                        <input type="hidden" id="sourceZone"> <!-- actual API value -->
+                        <div class="timezoneInputWrap">
+                            <input type="text" id="sourceZoneSearch" placeholder="Search timezone..." autocomplete="off">
+                            <button type="button" class="clearTimezoneBtn unselectable" id="clearSourceZone" aria-label="Clear from timezone">
+                                <img src="/images/trashicon.svg" class="trashIcon" alt="clear">
+                            </button>
+                        </div>
+                        <input type="hidden" id="sourceZone">
                         <div class="timezoneList" id="sourceZoneList"></div>
                     </div>
                 </div>
@@ -66,18 +71,23 @@
                 <div class="section">
                     <label for="targetZoneSearch">To Timezone</label>
                     <div class="timezonePicker">
-                        <input type="text" id="targetZoneSearch" placeholder="Search timezone..." autocomplete="off">
-                        <input type="hidden" id="targetZone"> 
+                        <div class="timezoneInputWrap">
+                            <input type="text" id="targetZoneSearch" placeholder="Search timezone..." autocomplete="off">
+                            <button type="button" class="clearTimezoneBtn unselectable" id="clearTargetZone" aria-label="Clear to timezone">
+                                <img src="/images/trashicon.svg" class="trashIcon" alt="clear">
+                            </button>
+                        </div>
+                        <input type="hidden" id="targetZone">
                         <div class="timezoneList" id="targetZoneList"></div>
                     </div>
                 </div>
 
                 <div class="section">
-                    <button class="unselectable" id="convertBtn">Convert</button>
+                    <button class="unselectable" class="convertBtn" id="convertTimeZone">Convert</button>
                 </div>
 
                 <div class="section">
-                    <div id="convertOutput"></div>
+                    <div class="convertOutput" id="convertTimeZoneOutput"></div>
                 </div>
 
             </div>
@@ -94,8 +104,21 @@
                 </div>
 
                 <div class="section">
-                    <label>Copy-Paste Time</label>
-                    <textarea id="copyPasteOutput"></textarea>
+                    <label for="copyPasteInput">Copy-Paste Time</label>
+                    <div class="textareaWrap">
+                        <textarea id="copyPasteInput" spellcheck="false" autocorrect="off"></textarea>
+                        <button type="button" class="clearTextareaBtn unselectable" id="clearCopyPasteInput" aria-label="Clear pasted time">
+                            <img src="/images/trashicon.svg" class="trashIcon" alt="">
+                        </button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <button class="unselectable" classs="convertBtn" id="convertCopyPaste">Convert</button>
+                </div>
+
+                <div class="section">
+                    <div class="convertOutput" id="convertCopyPasteOutput"></div>
                 </div>
 
             </div>

@@ -1,4 +1,4 @@
-/* ===== Base ===== */
+/* ===== 1. BASE & RESET ===== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -6,24 +6,39 @@
   font-family: "Inter", "Segoe UI", sans-serif;
 }
 
+html {
+  height: auto;
+  overflow: hidden; /* Critical for extension popups */
+}
+
 body {
   width: 340px;
-  min-height: 340px;
+  height: auto;
   background: #0f172a;
+  color: #e2e8f0;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   padding: 18px 0;
-  color: #e2e8f0;
+  overflow: hidden; /* Prevents scrollbar leak */
 }
 
-/* ===== Container ===== */
+/* Hide scrollbars for Chrome/Safari/Webkit */
+::-webkit-scrollbar {
+  display: none;
+}
+
+.unselectable {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ===== 2. LAYOUT & CONTAINERS ===== */
 .wrapper {
   width: 88%;
   display: flex;
   flex-direction: column;
   gap: 16px;
-
   padding: 22px;
   border-radius: 16px;
   background: rgba(30, 41, 59, 0.85);
@@ -31,14 +46,19 @@ body {
   border: 1px solid rgba(255,255,255,0.05);
 }
 
-/* ===== Title ===== */
 .title {
   font-size: 1.1rem;
   font-weight: 600;
   text-align: center;
 }
 
-/* ===== NAV BAR ===== */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ===== 3. NAVIGATION (TABS) ===== */
 .nav {
   position: relative;
   display: flex;
@@ -47,39 +67,28 @@ body {
   padding: 4px;
 }
 
-/* sliding indicator */
-
 .navSlider {
   position: absolute;
   top: 4px;
   bottom: 4px;
   left: 4px;
-
   width: calc(50% - 4px);
-
-  background: linear-gradient(135deg,#16a34a,#22c55e);
+  background: linear-gradient(135deg, #16a34a, #22c55e);
   border-radius: 10px;
-  box-shadow: 0 4px 14px rgba(34,197,94,0.35);
-
-  transition: transform 0.35s cubic-bezier(.4,.0,.2,1);
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
+  transition: transform 0.35s cubic-bezier(.4, .0, .2, 1);
   z-index: 0;
 }
-
-/* buttons */
 
 .navBtn {
   flex: 1;
   padding: 9px;
   font-size: 0.8rem;
-
   border: none;
   background: transparent;
-
   color: #94a3b8;
   cursor: pointer;
-
   z-index: 1;
-
   transition: color 0.25s ease;
 }
 
@@ -87,56 +96,37 @@ body {
   color: white;
 }
 
-/* ===== Tabs ===== */
-/* wrapper hides overflow */
+/* ===== 4. TAB ANIMATION CONTENT ===== */
 .tabsWrapper {
   overflow: hidden;
   position: relative;
   width: 100%;
 }
 
-/* sliding row */
 .tabsTrack {
   display: flex;
   width: 200%;
-
-  transition: transform 0.45s cubic-bezier(.22,1,.36,1);
+  transition: transform 0.45s cubic-bezier(.22, 1, .36, 1);
 }
 
-/* each tab */
 .tabContent {
   width: 50%;
   flex-shrink: 0;
-
   display: flex;
   flex-direction: column;
   gap: 12px;
-
   padding-top: 6px;
-
-  /* smooth visual polish */
   opacity: 0.95;
   transform: scale(0.98);
-
-  transition:
-    transform 0.45s cubic-bezier(.22,1,.36,1),
-    opacity 0.35s ease;
+  transition: transform 0.45s cubic-bezier(.22, 1, .36, 1), opacity 0.35s ease;
 }
 
-
-/* ===== Sections ===== */
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
+/* ===== 5. FORM ELEMENTS (INPUTS & BUTTONS) ===== */
 label {
   font-size: 0.75rem;
   color: #94a3b8;
 }
 
-/* ===== Inputs ===== */
 textarea,
 input {
   width: 100%;
@@ -154,7 +144,6 @@ textarea {
   min-height: 60px;
 }
 
-/* ===== Button ===== */
 button {
   width: 100%;
   padding: 11px;
@@ -172,6 +161,36 @@ button:hover {
   box-shadow: 0 6px 18px rgba(34,197,94,0.35);
 }
 
+/* ===== 6. TIME & TIMEZONE PICKER COMPONENTS ===== */
+.standardTimeInput {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.time-picker-select {
+  flex: 1;
+  padding: 9px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+#ampmSelector {
+  flex: 0.6;
+}
+
+.time-separator {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
 .timezonePicker {
   position: relative;
   width: 100%;
@@ -180,7 +199,7 @@ button:hover {
 .timezoneList {
   margin-top: 6px;
   max-height: 120px;
-  overflow-y: auto;
+  overflow-y: auto; /* Internal scrolling allowed here */
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.08);
   background: #1e293b;
@@ -199,71 +218,62 @@ button:hover {
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-.timezoneOption:last-child {
-  border-bottom: none;
-}
-
 .timezoneOption:hover,
 .timezoneOption.active {
   background: rgba(34,197,94,0.12);
   color: #22c55e;
 }
 
-.timezoneEmpty {
-  padding: 10px 12px;
-  font-size: 0.85rem;
-  color: #94a3b8;
-}
-
-.standardTimeInput {
+/* ===== 7. INPUT WRAPPERS & CLEAR BUTTONS ===== */
+.timezoneInputWrap, .textareaWrap {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
 }
 
-.time-picker-select {
-  flex: 1;
-  padding: 9px 8px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: #1e293b;
-  color: #e2e8f0;
-  font-size: 0.85rem;
-  outline: none;
+.timezoneInputWrap input, 
+.textareaWrap textarea {
+  padding-right: 42px;
+}
+
+.clearTimezoneBtn, .clearTextareaBtn {
+  position: absolute;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
   cursor: pointer;
-
-  transition: border 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
 }
 
-/* smaller width for AM PM */
-#ampmSelector {
-  flex: 0.6;
+.clearTextareaBtn {
+  top: 8px;
+  right: 8px;
+  background: rgba(255,255,255,0.08);
 }
 
-.time-picker-select:hover {
-  border-color: rgba(255,255,255,0.18);
+.timezoneInputWrap input:not(:placeholder-shown) + .clearTimezoneBtn,
+.textareaWrap.hasText .clearTextareaBtn {
+  opacity: 1;
+  pointer-events: auto;
 }
 
-.time-picker-select:focus {
-  border-color: rgba(34,197,94,0.4);
-  box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
+.trashIcon {
+  width: 14px;
+  height: 14px;
+  fill: #94a3b8;
+  transition: fill 0.15s ease, transform 0.15s ease;
 }
 
-.time-separator {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #94a3b8;
-}
-
-/* dropdown menu */
-.time-picker-select option {
-  background: #1e293b;
-  color: #e2e8f0;
-}
-
-/* ===== Outputs ===== */
+/* ===== 8. OUTPUTS ===== */
 #timezone,
-#convertOutput {
+.convertOutput {
   padding: 10px;
   border-radius: 10px;
   font-size: 0.85rem;
@@ -271,12 +281,4 @@ button:hover {
   border: 1px solid rgba(34,197,94,0.25);
   text-align: center;
   color: #22c55e;
-}
-
-/* miscellaneous */
-.unselectable {
-  -webkit-user-select: none; /* Safari */
-  -moz-user-select: none; /* Firefox */
-  -ms-user-select: none; /* IE 10+ and Edge */
-  user-select: none; /* Standard syntax */
 }

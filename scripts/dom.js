@@ -1,0 +1,30 @@
+export const DOM = {
+    locationButton: document.getElementById("getLocation"),
+    timezoneDiv: document.getElementById("timezone"),
+    tabs: document.querySelectorAll(".navBtn"),
+    slider: document.querySelector(".navSlider"),
+    track: document.querySelector(".tabsTrack"),
+
+    sourceZoneInput: document.getElementById("sourceZoneSearch"),
+    sourceZoneValue: document.getElementById("sourceZone"),
+    sourceZoneList: document.getElementById("sourceZoneList"),
+    clearSourceZoneButton: document.getElementById("clearSourceZone"),
+
+    targetZoneInput: document.getElementById("targetZoneSearch"),
+    targetZoneValue: document.getElementById("targetZone"),
+    targetZoneList: document.getElementById("targetZoneList"),
+    clearTargetZoneButton: document.getElementById("clearTargetZone"),
+    
+    hourPicker: document.getElementById("hourSelector"),
+    minutePicker: document.getElementById("minuteSelector"),
+    ampmPicker: document.getElementById("ampmSelector"),
+
+    convertButton: document.getElementById("convertTimeZone"),
+    convertOutput: document.getElementById("convertTimeZoneOutput"),
+
+    copyPasteInput: document.getElementById("copyPasteInput"),
+    copyPasteConvertButton: document.getElementById("convertCopyPaste"),
+    copyPasteOutput: document.getElementById("convertCopyPasteOutput"),
+    clearCopyPasteButton: document.getElementById("clearCopyPasteInput"),
+    copyPasteWrapper: document.querySelector(".textareaWrap"),
+};
