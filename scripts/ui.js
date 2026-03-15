@@ -1,5 +1,6 @@
 import { DOM } from "./dom.js";
 import { savePopupState } from "./manageState.js";
+import { timezoneOffsets } from "./timezoneOffsets.js";
 
 export function applyTimezoneUI(timezone) {
     DOM.timezoneDiv.textContent = timezone.zoneName;
@@ -82,15 +83,11 @@ export function convertTime() {
         let UTCDisplacementSource = Math.floor(sourceData.gmtOffset / 3600);
         let UTCDisplacementTarget = Math.floor(targetData.gmtOffset / 3600);
 
-        if(UTCDisplacementSource > 0) {
+        if(UTCDisplacementSource >= 0) {
             UTCDisplacementSource = "+" + UTCDisplacementSource;
-        } else if(UTCDisplacementSource === 0) {
-            UTCDisplacementSource = "-" + UTCDisplacementSource;
         }
-        if(UTCDisplacementTarget > 0) {
+        if(UTCDisplacementTarget >= 0) {
             UTCDisplacementTarget = "+" + UTCDisplacementTarget;
-        } else if(UTCDisplacementTarget === 0) {
-            UTCDisplacementTarget = "-" + UTCDisplacementTarget;
         }
 
         DOM.convertOutput.innerHTML = `From: UTC${UTCDisplacementSource} to UTC${UTCDisplacementTarget} <br> ${h12}:${m} ${ampm}${dayLabels[dayShift] || ""}`;
@@ -126,6 +123,8 @@ function sanitizeTimeInput(input) {
 }
 
 export function convertPastedTime() {
-    let sanitizedText = sanitizeTimeInput(DOM.copyPasteInput.value); // sanitize
-    console.log(sanitizedText);
+
+    let sanitizedText = sanitizeTimeInput(DOM.copyPasteInput.value);
+
+    console.log(sanitizedText); // test
 }
