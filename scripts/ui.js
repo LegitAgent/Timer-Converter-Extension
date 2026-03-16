@@ -1,6 +1,5 @@
 import { DOM } from "./dom.js";
 import { savePopupState } from "./manageState.js";
-import { timezoneOffsets } from "./timezoneOffsets.js";
 
 export function applyTimezoneUI(timezone) {
     DOM.timezoneDiv.textContent = timezone.zoneName;
@@ -106,25 +105,4 @@ export function clearTimezonePicker(inputEl, hiddenEl, listEl) {
 
     savePopupState();
     inputEl.focus();
-}
-
-function sanitizeTimeInput(input) {
-    if (typeof input !== "string") return "";
-
-    // only allow characters found in times and timezone names:
-    // numbers, colons, spaces, letters, slashes, plus/minus, and underscores.
-    // this automatically blocks < > " ' ` and all control characters.
-    let clean = input.replace(/[^a-zA-Z0-9\s:/+_\-]/g, "");
-
-    // limit length (Time strings are rarely over 50 chars)
-    clean = clean.trim().slice(0, 100);
-
-    return clean;
-}
-
-export function convertPastedTime() {
-
-    let sanitizedText = sanitizeTimeInput(DOM.copyPasteInput.value);
-
-    console.log(sanitizedText); // test
 }

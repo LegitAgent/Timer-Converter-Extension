@@ -3,10 +3,11 @@ import { DOM } from "./dom.js";
 import { storageLocal, storageSession } from "./storage.js";
 import { savePopupState, restoreState } from "./manageState.js";
 import { applyTimezoneUI, updateCopyPasteClearButton, clearCopyPasteInput, setupTimePickerOptions,
-         convertTime, clearTimezonePicker, convertPastedTime } from "./ui.js";
+         convertTime, clearTimezonePicker } from "./ui.js";
 import { getLocation, fetchTimezone, fetchTimezoneList } from "./api.js";
 import { initCustomDropdowns } from "./timezonePicker.js";
 import { setUpTabs } from "./tabs.js";
+import { convertPastedTime } from "./copyPasteConverter.js";
 
 async function handleLocationRequest() {
     DOM.locationButton.classList.add("loading");

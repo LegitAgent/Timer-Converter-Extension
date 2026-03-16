@@ -55,6 +55,7 @@ export const timezoneOffsets = {
   "UTC-2:30": -2.5, // UTC minus 2 hours 30 minutes
   "UTC-2": -2, // UTC minus 2 hours
   "UTC-1": -1, // UTC minus 1 hour
+  "UTC-0": 0, // UTC minus 0 hours
   "UTC+0": 0, // UTC plus 0 hours
   "UTC+1": 1, // UTC plus 1 hour
   "UTC+2": 2, // UTC plus 2 hours
@@ -110,25 +111,25 @@ export const timezoneOffsets = {
    ********/
   "AFT": 4.5, // Afghanistan Time
   "ALMT": 6, // Alma-Ata Time
-  "AMT-Asia": 4, // Armenia Time
-  "AMST-Armenia": 5, // Armenia Summer Time
+  "AMT-ASIA": 4, // Armenia Time
+  "AMST-ARMENIA": 5, // Armenia Summer Time
   "ANAST": 12, // Anadyr Summer Time
   "ANAT": 12, // Anadyr Time
   "AQTT": 5, // Aqtobe Time
-  "AST-Arabia": 3, // Arabia Standard Time
+  "AST-ARABIA": 3, // Arabia Standard Time
   "AZST": 5, // Azerbaijan Summer Time
   "AZT": 4, // Azerbaijan Time
   "BNT": 8, // Brunei Darussalam Time
-  "BST-Asia": 6, // Bangladesh Standard Time
+  "BST-ASIA": 6, // Bangladesh Standard Time
   "BTT": 6, // Bhutan Time
   "CAST": 8, // Casey Time
   "CCT": 6.5, // Cocos Islands Time
   "CHOST": 9, // Choibalsan Summer Time
   "CHOT": 8, // Choibalsan Time
-  "CST-Asia": 8, // China Standard Time
+  "CST-ASIA": 8, // China Standard Time
   "DAVT": 7, // Davis Time
   "DDUT": 10, // Dumont d’Urville Time
-  "GST-Asia": 4, // Gulf Standard Time
+  "GST-ASIA": 4, // Gulf Standard Time
   "HKT": 8, // Hong Kong Time
   "HOVST": 8, // Hovd Summer Time
   "HOVT": 7, // Hovd Time
@@ -139,8 +140,8 @@ export const timezoneOffsets = {
   "IRKST": 9, // Irkutsk Summer Time
   "IRKT": 8, // Irkutsk Time
   "IRST": 3.5, // Iran Standard Time
-  "IST-Asia": 2, // Israel Standard Time
-  "IST-India": 5.5, // India Standard Time
+  "IST-ASIA": 2, // Israel Standard Time
+  "IST-INDIA": 5.5, // India Standard Time
   "JST": 9, // Japan Standard Time
   "KGT": 6, // Kyrgyzstan Time
   "KOST": 11, // Kosrae Time
@@ -166,7 +167,7 @@ export const timezoneOffsets = {
   "PHT": 8, // Philippine Time
   "PKT": 5, // Pakistan Standard Time
   "PONT": 11, // Pohnpei Time
-  "PYT-Pyongyang": 8.5, // Pyongyang Time
+  "PYT-PYONGYANG": 8.5, // Pyongyang Time
   "QYZT": 6, // Qyzylorda Time
   "SAKT": 11, // Sakhalin Time
   "SAMT": 4, // Samara Time
@@ -195,18 +196,18 @@ export const timezoneOffsets = {
    ************************/
   "ACDT": 10.5, // Australian Central Daylight Time
   "ACST": 9.5, // Australian Central Standard Time
-  "ACT-Australia": [9.5, 10.5], // Australian Central Time [standard, daylight]
+  "ACT-AUSTRALIA": [9.5, 10.5], // Australian Central Time [standard, daylight]
   "ACWST": 8.75, // Australian Central Western Standard Time
   "AEDT": 11, // Australian Eastern Daylight Time
   "AEST": 10, // Australian Eastern Standard Time
   "AET": [10, 11], // Australian Eastern Time [standard, daylight]
   "AWDT": 9, // Australian Western Daylight Time
   "AWST": 8, // Australian Western Standard Time
-  "BST-Pacific": 11, // Bougainville Standard Time
+  "BST-PACIFIC": 11, // Bougainville Standard Time
   "CHADT": 13.75, // Chatham Daylight Time
   "CHAST": 12.75, // Chatham Standard Time
   "CHUT": 10, // Chuuk Time
-  "ChST": 10, // Chamorro Standard Time
+  "CHST": 10, // Chamorro Standard Time
   "CXT": 7, // Christmas Island Time
   "FJST": 13, // Fiji Summer Time
   "FJT": 12, // Fiji Time
@@ -233,24 +234,24 @@ export const timezoneOffsets = {
   "VUT": 11, // Vanuatu Time
   "WAKT": 12, // Wake Island Time
   "WFT": 12, // Wallis and Futuna Time
-  "WST-Variant1": 13, // Samoa Standard Time / West Samoa Time variant
+  "WST-VARIANT1": 13, // Samoa Standard Time / West Samoa Time variant
   "YAPT": 10, // Yap Time
 
   /************************************
    * AMERICAS / ATLANTIC / CARIBBEAN
    ************************************/
-  "ACT-SouthAmerica": -5, // Acre Time
-  "ADT-NorthAmerica": -3, // Atlantic Daylight Time
-  "AMST-SouthAmerica": -3, // Amazon Summer Time
-  "AMT-SouthAmerica": -4, // Amazon Time
-  "AoE": -12, // Anywhere on Earth
+  "ACT-SOUTHAMERICA": -5, // Acre Time
+  "ADT-NORTHAMERICA": -3, // Atlantic Daylight Time
+  "AMST-SOUTHAMERICA": -3, // Amazon Summer Time
+  "AMT-SOUTHAMERICA": -4, // Amazon Time
+  "AOE": -12, // Anywhere on Earth
   "ART": -3, // Argentina Time
   "AST": -4, // Atlantic Standard Time
   "AT": [-4, -3], // Atlantic Time [standard, daylight]
   "BOT": -4, // Bolivia Time
   "BRST": -2, // Brasília Summer Time
   "BRT": -3, // Brasília Time
-  "CDT-Caribbean": -4, // Cuba Daylight Time / Caribbean daylight variant
+  "CDT-CARIBBEAN": -4, // Cuba Daylight Time / Caribbean daylight variant
   "CDT": -5, // Central Daylight Time
   "CIDST": -4, // Cayman Islands Daylight Saving Time
   "CIST": -5, // Cayman Islands Standard Time
@@ -258,7 +259,7 @@ export const timezoneOffsets = {
   "CLST": -3, // Chile Summer Time
   "CLT": -4, // Chile Standard Time
   "COT": -5, // Colombia Time
-  "CST-Caribbean": -5, // Cuba Standard Time / Caribbean standard variant
+  "CST-CARIBBEAN": -5, // Cuba Standard Time / Caribbean standard variant
   "CST": -6, // Central Standard Time
   "CT": [-6, -5], // Central Time [standard, daylight]
   "CVT": -1, // Cape Verde Time
@@ -274,7 +275,7 @@ export const timezoneOffsets = {
   "GALT": -6, // Galápagos Time
   "GAMT": -9, // Gambier Time
   "GFT": -3, // French Guiana Time
-  "GST-SouthAmerica": -2, // South Georgia Time variant
+  "GST-SOUTHAMERICA": -2, // South Georgia Time variant
   "GYT": -4, // Guyana Time
   "HDT": -9, // Hawaii-Aleutian Daylight Time
   "HST": -10, // Hawaii-Aleutian Standard Time
@@ -292,7 +293,7 @@ export const timezoneOffsets = {
   "PST": -8, // Pitcairn Standard Time / Pacific variant
   "PT": [-8, -7], // Pacific Time [standard, daylight]
   "PYST": -3, // Paraguay Summer Time
-  "PYT-SouthAmerica": -3, // Paraguay Time variant in this map
+  "PYT-SOUTHAMERICA": -3, // Paraguay Time variant in this map
   "RET": 4, // Réunion Time
   "ROTT": -3, // Rothera Time
   "SRT": -3, // Suriname Time

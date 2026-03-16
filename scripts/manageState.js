@@ -18,7 +18,8 @@ export async function savePopupState() {
                 cachedHour: DOM.hourPicker.value,
                 cachedMinute: DOM.minutePicker.value,
                 cachedAMPM: DOM.ampmPicker.value,
-                cachedConvertOutput: DOM.convertOutput.innerHTML
+                cachedConvertOutput: DOM.convertOutput.innerHTML,
+                cachedCopyPasteOutput: DOM.copyPasteOutput.innerHTML
             }
         });
     } catch(error) {
@@ -59,6 +60,10 @@ export async function restoreState() {
             DOM.convertOutput.innerHTML = popupState.cachedConvertOutput;
         }
         updateCopyPasteClearButton();
+
+        if(popupState.cachedCopyPasteOutput) {
+            DOM.copyPasteOutput.innerHTML = popupState.cachedCopyPasteOutput;
+        }
 
         if (popupState.tab) {
             const savedTabBtn = document.querySelector(`.navBtn[data-tab="${popupState.tab}"]`);
