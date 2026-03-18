@@ -1,4 +1,3 @@
-// notes: UPDATE ID FOR CORS POLICY PROTECTION
 import { DOM } from "./dom.js";
 import { storageLocal, storageSession } from "./storage.js";
 import { savePopupState, restoreState } from "./manageState.js";
@@ -9,7 +8,10 @@ import { initCustomDropdowns } from "./timezonePicker.js";
 import { setUpTabs } from "./tabs.js";
 import { convertPastedTime } from "./copyPasteConverter.js";
 
-async function handleLocationRequest() {
+/**
+ * gets the location of the user, and updates the text content of #timezone to the user's local time zone
+ */
+async function handleLocationRequest() {    
     DOM.locationButton.classList.add("loading");
     DOM.locationButton.textContent = "Detecting...";
 
@@ -38,6 +40,9 @@ async function handleLocationRequest() {
     }
 }
 
+/**
+ * gets the list of time zones from timezonedb and initializes them as a list
+ */
 async function handleTimezoneListRequest() {
     try {
         let { timezone_list } = await storageSession.get("timezone_list");
@@ -57,6 +62,9 @@ async function handleTimezoneListRequest() {
     }
 }
 
+/**
+ * initialization of the popup
+ */
 function init() {
     setUpTabs();
     DOM.copyPasteInput.addEventListener("input", () => {

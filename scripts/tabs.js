@@ -1,6 +1,9 @@
 import { savePopupState } from "./manageState.js";
 import { DOM } from "./dom.js";
 
+/**
+ * sets up the navigation bar at the top of the extension
+ */
 export function setUpTabs() {
     DOM.tabs.forEach((btn, index) => {
         btn.addEventListener("click", () => {

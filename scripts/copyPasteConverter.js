@@ -5,7 +5,7 @@ import { timezoneOffsets } from "./timezoneOffsets.js";
 
 /**
  * sanitizes user input by removing control characters, such as /, <, >, and etc.
- * @param {*} input string user time input
+ * @param {string} input string user time input
  * @returns sanitized user input
  */
 function sanitizeTimeInput(input) {
@@ -21,8 +21,8 @@ function sanitizeTimeInput(input) {
 
 /**
  * processes a time string by checking for an "inline" format (e.g., "6:00PM" or "1230AM").
- * @param {*} time time input from user i.e. 12:00
- * @param {*} ampm AM/PM user input or AM/PM section (undefined for military time)
+ * @param {string} time time input from user i.e. 12:00
+ * @param {string} ampm AM/PM user input or AM/PM section (undefined for military time)
  * @returns 
  */
 function extractTimeParts(time, ampm) {
@@ -45,7 +45,7 @@ function extractTimeParts(time, ampm) {
 // STANDARD FORMAT: TIME [AM/PM] TIMEZONE
 /**
  * puts the sections in standard format (TIME, [AM/PM (optional)], TIMEZONE)
- * @param {*} str user time input
+ * @param {string} str user time input
  * @returns map of user input sections: (time: Time, ampm: AM/PM, tz: timezone)
  */
 function getStandardFormat(str) {
@@ -68,8 +68,8 @@ function getStandardFormat(str) {
 // REVERSE FORMAT: TIMEZONE TIME [AM/PM]
 /**
  * puts the sections in reverse format (TIMEZONE, TIME, [AM/PM (optional)])
- * @param {*} str user time input
- * @returns map of user input sections: (time: Time, ampm: AM/PM, tz: timezone)
+ * @param {string} str user time input
+ * @returns a map of user input sections: (time: Time, ampm: AM/PM, tz: timezone)
  */
 function getReverseFormat(str) {
     const regex = /^(?<tz>\S+)\s+(?<time>\S+)(?:\s+(?<ampm>\S+))?$/i;
@@ -88,15 +88,30 @@ function getReverseFormat(str) {
     };
 }
 
+/**
+ * checks to see if a specific time zone abbreviation is in timezoneOffsets.
+ * @param {string} tz a time zone abbreviation (e.g. PST, CEST, CET, etc.)
+ * @returns {Boolean} if the time zone has the inputted abbreviation
+ */
 function isValidTimezone(tz) {
     return Object.hasOwn(timezoneOffsets, tz);
 }
-
+/**
+ * checks to see if the input is a valid AM/PM format.
+ * @param {string} ampm a string for the ampm section
+ * @returns {Boolean} if the given string is in valid AM/PM format
+ */
 function isValidAMPM(ampm) {
     if (ampm === undefined) return true;
     return ampm === "AM" || ampm === "PM";
 }
 
+/**
+ * checks to see if the time is valid and gets its corresponding hours and minutes if possible.
+ * @param {string} time a string for the time section
+ * @param {string} ampm a string for the ampm section
+ * @returns {(Object | Boolean)} an Object literal if it is a valid set of strings (hours and minutes), and false if it is not
+ */
 function getHoursAndMinutes(time, ampm) {
     // supports:
     // 8
@@ -105,7 +120,7 @@ function getHoursAndMinutes(time, ampm) {
     // 0800
     // 8:00
     // 08:00
-    let hours;
+    let hours = 0;
     let minutes = 0;
 
     if (time.includes(":")) { // for all colon'd time i.e. 12:00, 13:00
@@ -155,13 +170,29 @@ function getHoursAndMinutes(time, ampm) {
     return { hours, minutes };
 }
 
+/**
+ * checks if the given time and ampm format is a valid format.
+ * @param {string} time a string for the time section
+ * @param {string} ampm a string for the ampm section
+ * @returns 
+ */
 function isValidTime(time, ampm) {
-    return !!getHoursAndMinutes(time, ampm);
+    return !!getHoursAndMinutes(time, ampm); // !! == truthy if != undefined, else falsy
 }
 
+/**
+ * checks to see if the given time zone has daylight savings
+ * @param {string} tz a time zone abbreviation (e.g. PST, CEST, CET, etc.)
+ * @returns {Boolean} if the time zome given has daylight savings
+ */
 function checkDaylightSavings(tz) {
 
-    // arbitrary
+    // arbitrary calculation for DST of a given date
+    /**
+     * determines if daylight savings is currently active in North America given a date
+     * @param {Date} date a date
+     * @returns if the given date has daylight savings in North America
+     */
     function isNorthAmericaDST(date) {
         const year = date.getFullYear();
 
@@ -180,7 +211,11 @@ function checkDaylightSavings(tz) {
         return date >= dstStart && date < dstEnd;
     }
 
-    // arbitrary
+    /**
+     * determines if daylight savings is currently active in Australia given a date
+     * @param {Date} date a date
+     * @returns if the given date has daylight savings in Australia
+     */
     function isAustraliaDST(date) {
         const year = date.getFullYear();
 
@@ -215,24 +250,28 @@ function checkDaylightSavings(tz) {
         case "AET":
         case "ACT-AUSTRALIA":
             return isAustraliaDST(today);
-
-        // should never happen
         default:
             return false;
     }
 }
 
+/**
+ * converts your detected local time zone to the inputted time zone abbreviation.
+ * @param {Object} fromTime an Object mapping of the local time zone
+ * @param {Object} toTime an Object mapping for {time, ampm, tz}
+ * @returns {string} a text display of the converted time
+ */
 function convertToLocal(fromTime, toTime) {
     const toTimeZone = toTime.gmtOffset / 3600;
     const { hours, minutes } = getHoursAndMinutes(fromTime.time, fromTime.ampm);
     let fromTimeZone = timezoneOffsets[fromTime.tz];
 
-    if (Array.isArray(fromTimeZone)) {
+    if (Array.isArray(fromTimeZone)) { // array == [no dst, with dst] in timzoneOffsets
         const idx = checkDaylightSavings(fromTime.tz) ? 1 : 0;
         fromTimeZone = fromTimeZone[idx];
     }
 
-    const totalOffset = toTimeZone - fromTimeZone;
+    const totalOffset = toTimeZone - fromTimeZone; // gmt offset in hours
     const hourDiff = Math.floor(totalOffset);
     const minuteDiff = Math.round((totalOffset - hourDiff) * 60);
 
@@ -262,7 +301,7 @@ function convertToLocal(fromTime, toTime) {
 
     const displayAMPM = actualHours >= 12 ? "PM" : "AM";
     const displayHour = actualHours % 12 === 0 ? 12 : actualHours % 12;
-    const displayMinute = String(actualMinutes).padStart(2, "0");
+    const displayMinute = String(actualMinutes).padStart(2, "0"); // pad with 00 if less than length 2 (e.g. 3 -> 03)
 
     let dayText = "";
     if (dayOffset === 1) dayText = " (next day)";
@@ -273,6 +312,11 @@ function convertToLocal(fromTime, toTime) {
     return `${displayHour}:${displayMinute} ${displayAMPM}${dayText} in ${toTime.zoneName}`;
 }
 
+/**
+ * checks to see if a given Object is valid.
+ * @param {Object} map an Object with keys = {tz, ampm, time}
+ * @returns if the given Object has valid formatting for each key
+ */
 function isValid(map) {
     const validTimezone = isValidTimezone(map.tz);
     if (!validTimezone) {
@@ -294,6 +338,10 @@ function isValid(map) {
     return true;
 }
 
+/**
+ * converts the pasted time in to the user's local time.
+ * @returns errors, if any
+ */
 export async function convertPastedTime() {
     const { timezone_now } = await storageLocal.get("timezone_now");
     if (!timezone_now) {

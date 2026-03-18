@@ -1,6 +1,10 @@
 import { DOM } from "./dom.js";
 import { savePopupState } from "./manageState.js";
 
+/**
+ * edits the button div to have a "success" UI.
+ * @param {Object} timezone a time zone object from the user location
+ */
 export function applyTimezoneUI(timezone) {
     DOM.timezoneDiv.textContent = timezone.zoneName;
     DOM.timezoneDiv.classList.add("success");
@@ -9,6 +13,10 @@ export function applyTimezoneUI(timezone) {
     savePopupState();
 }
 
+/**
+ * updates the copy paste text area to have the trash icon.
+ * @returns nothing if the wrapper is null
+ */
 export function updateCopyPasteClearButton() {
     if (!DOM.copyPasteWrapper) return;
 
@@ -16,6 +24,9 @@ export function updateCopyPasteClearButton() {
     DOM.copyPasteWrapper.classList.toggle("hasText", hasText);
 }
 
+/**
+ * clears the input of the copy paste text area.
+ */
 export function clearCopyPasteInput() {
     DOM.copyPasteInput.value = "";
     updateCopyPasteClearButton();
@@ -23,6 +34,9 @@ export function clearCopyPasteInput() {
     DOM.copyPasteInput.focus();
 }
 
+/**
+ * sets up the picker for the time in converting time zones.
+ */
 export function setupTimePickerOptions() {
     for (let i = 1; i <= 12; i++) {
         const opt = document.createElement("option");
@@ -41,6 +55,10 @@ export function setupTimePickerOptions() {
 
 // limitation: if you convert time at exactly where DST is affected and you did not quit/restart the extension session, it will still presume DST and vice versa.
 // to limit free API calls ^^^^
+/**
+ * converts the time from the source zone to the target zone.
+ * @returns nothing if either sources are not valid
+ */
 export function convertTime() {
     try {
         // ensure zones are selected
@@ -103,6 +121,12 @@ export function convertTime() {
     }
 }
 
+/**
+ * clears the time zone picker
+ * @param {Element} inputEl an input tag for the user to search and place their queries in
+ * @param {Element} hiddenEl a hidden input tag for storing values
+ * @param {Element} listEl a div tag for displaying a list of time zones
+ */
 export function clearTimezonePicker(inputEl, hiddenEl, listEl) {
     inputEl.value = "";
     hiddenEl.value = "";

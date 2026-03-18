@@ -10,7 +10,14 @@ import { savePopupState } from "./manageState.js";
  *   4. Contains query as a substring
  *   5. Levenshtein distance on the closest segment (catches typos)
  */
-export function fuzzySearchTimezones(timezones, query) {
+
+/**
+ * scores a list of words given some query, the score is calculated using levenshtein algorithm.
+ * @param {Array} timezones an array of time zones
+ * @param {string} query a string query
+ * @returns {Object} an array of time zones with their corresponding scores
+ */
+function fuzzySearchTimezones(timezones, query) {
     if (!query) return timezones; // empty → full alphabetical list
 
     const q = query.toLowerCase();
@@ -65,7 +72,7 @@ export function fuzzySearchTimezones(timezones, query) {
 
     /**
      * calculates the score of a timezone compared a query using the levenshtein algorithm
-     * @param {String} tz : timezone
+     * @param {string} tz country time zone name
      * @returns score of a timezone against a query
      */
     function score(tz) {
@@ -92,10 +99,22 @@ export function fuzzySearchTimezones(timezones, query) {
         .map(({ tz }) => tz); // extract the timezone strings from the objects
 }
 
+/**
+ * initializes the time zone picker dropdown and its event listeners.
+ * @param {Element} inputEl an input tag for the user to search and place their queries in
+ * @param {Element} hiddenEl a hidden input tag for storing values
+ * @param {Element} listEl a div tag for displaying a list of time zones
+ * @param {Object} timezones an array of time zones with key-value pairs of display name and values (e.g. abbreviations, city name, gmt offset, etc.)
+ */
 export function setupTimezonePicker(inputEl, hiddenEl, listEl, timezones) {
     let filtered = [...timezones];
     let activeIndex = -1;
 
+    /**
+     * renders a list of items and adds styling for highlighting similar words to the query and adding hues to selected time zones.
+     * @param {Object} items an array of time zones with key-value pairs of display name and values (e.g. abbreviations, city name, gmt offset, etc.)
+     * @returns nothing if there are no time zones to show
+     */
     function renderList(items) {
         listEl.innerHTML = ""; // clear
 
@@ -134,6 +153,10 @@ export function setupTimezonePicker(inputEl, hiddenEl, listEl, timezones) {
         listEl.classList.add("show");
     }
 
+    /**
+     * selects a time zone and saves its value to the hidden and displayed inputs. Also removes the list after picking a time zone.
+     * @param {string} tz country time zone name
+     */
     function selectTimezone(tz) {
         inputEl.value = tz.label;
         hiddenEl.value = JSON.stringify(tz.value);
@@ -186,12 +209,16 @@ export function setupTimezonePicker(inputEl, hiddenEl, listEl, timezones) {
     });
 }
 
+/**
+ * initializes the custom drop down by displaying and unwrapping the json object from the fetch and passes it on to the source and target zone inputs.
+ * @param {Object} timezones an array of time zones with key-value pairs of display name and values (e.g. abbreviations, city name, gmt offset, etc.)
+ * @returns nothing if there are no time zones to show
+ */
 export function initCustomDropdowns(timezones) {
     if (timezones.length === 0) {
         console.error("initCustomDropdowns: received no timezones", timezones);
         return;
     }
-
     // sort alphabetically
     const normalizedTimezones = [];
 

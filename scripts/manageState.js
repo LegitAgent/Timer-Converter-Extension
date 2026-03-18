@@ -2,6 +2,10 @@ import { DOM } from "./dom.js";
 import { storageLocal } from "./storage.js";
 import { updateCopyPasteClearButton } from "./ui.js"
 
+/**
+ * saves the current state of the popup, and stores it to google local storage
+ * @returns 
+ */
 export async function savePopupState() {
     try {
         const activeTab = document.querySelector(".navBtn.active")?.dataset.tab;
@@ -24,9 +28,14 @@ export async function savePopupState() {
         });
     } catch(error) {
         console.error("Failed to save popup state:", error);
+        return;
     }
 }
 
+/**
+ * accesses google local storage, and retrieves all stored states of the popup
+ * @returns 
+ */
 export async function restoreState() {
     try {
         const { popupState } = await storageLocal.get("popupState");
