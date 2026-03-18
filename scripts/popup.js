@@ -63,6 +63,32 @@ async function handleTimezoneListRequest() {
 }
 
 /**
+ * creates a window for instructions.html and stores the window ID.
+ */
+function createInstructionWindow() {
+    chrome.windows.create({
+        url: chrome.runtime.getURL("HTML/instructions.html"),
+        type: "popup",
+        width: 820,
+        height: 760
+    }, (window) => {
+        DOM.windowID = window.id;
+        savePopupState(); // sync to storage immediately
+    });
+}
+
+/**
+ * checks if the window removed was the windowID, if so set windowID to null.
+ */
+chrome.windows.onRemoved.addListener((closedId) => {
+    if (DOM.windowID && closedId === DOM.windowID) {
+        console.log("Manual window closed.");
+        DOM.windowID = null; 
+        savePopupState();
+    }
+});
+
+/**
  * initialization of the popup
  */
 function init() {
@@ -90,20 +116,27 @@ function init() {
     DOM.clearTargetZoneButton?.addEventListener("click", () => {
         clearTimezonePicker(DOM.targetZoneInput, DOM.targetZoneValue, DOM.targetZoneList);
     });
-
-    DOM.openManualIcon.addEventListener("click", () => {
-        chrome.windows.create({
-            url: chrome.runtime.getURL("HTML/instructions.html"),
-            type: "popup",
-            width: 820,
-            height: 760
-        });
-    });
     
     setupTimePickerOptions();
 
     handleTimezoneListRequest();
     restoreState();
+
+    DOM.openManualIcon.addEventListener("click", () => {
+        if (DOM.windowID) {
+            // check if window still exists before focusing
+            chrome.windows.get(DOM.windowID, (window) => {
+                if (chrome.runtime.lastError || !window) {
+                    DOM.windowID = null;
+                    createInstructionWindow();
+                } else {
+                    chrome.windows.update(DOM.windowID, { focused: true });
+                }
+            });
+            return;
+        }
+        createInstructionWindow();
+    });
 }
 
 document.addEventListener("DOMContentLoaded", init);

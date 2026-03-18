@@ -12,6 +12,7 @@ export async function savePopupState() {
         
         await storageLocal.set({
             popupState: {
+                windowID: DOM.windowID,
                 tab: activeTab,
                 cachedCopyPasteInput: DOM.copyPasteInput.value,
                 timezoneOut: DOM.timezoneDiv.textContent,
@@ -40,6 +41,10 @@ export async function restoreState() {
     try {
         const { popupState } = await storageLocal.get("popupState");
         if (!popupState) return;
+
+        if(popupState.windowID) {
+            DOM.windowID = popupState.windowID;
+        }
 
         if (popupState.cachedCopyPasteInput) {
             DOM.copyPasteInput.value = popupState.cachedCopyPasteInput;

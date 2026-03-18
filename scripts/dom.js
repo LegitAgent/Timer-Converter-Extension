@@ -2,6 +2,8 @@
  * A file for all DOM elements that are edited
  */
 export const DOM = {
+    windowID: null,
+
     locationButton: document.getElementById("getLocation"),
     timezoneDiv: document.getElementById("timezone"),
     tabs: document.querySelectorAll(".navBtn"),
