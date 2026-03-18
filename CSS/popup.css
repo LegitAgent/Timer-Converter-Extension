@@ -282,3 +282,55 @@ button:hover {
   text-align: center;
   color: #22c55e;
 }
+
+.infoIconWrapper {
+  margin-left: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  position: relative;
+  display: inline-block;
+}
+
+.infoIconWrapper::after {
+  content: attr(data-tooltip);
+  position: absolute;
+
+  bottom: 140%;
+  left: 0; 
+  transform: none; 
+
+  background: #222;
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.4;
+
+  width: max-content;
+  max-width: 150px;
+  white-space: normal;
+  overflow-wrap: break-word;
+
+  text-align: left;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+
+  z-index: 1000;
+}
+
+.infoIconWrapper:hover::after {
+  opacity: 1;
+}
+
+.infoIcon {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+/* Make label relative to contain tooltip */
+.labelWithInfo {
+    position: relative;
+}

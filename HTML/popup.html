@@ -10,7 +10,7 @@
 
 <div class="wrapper">
 
-    <div class="title unselectable">Convert Any Time</div>
+    <div class="title unselectable">Time Zone Converter</div>
 
     <!-- NAV BAR -->
     <div class="nav">
@@ -18,11 +18,11 @@
         <div class="navSlider"></div>
 
         <button class="unselectable navBtn active" data-tab="convert">
-            Convert Time
+            Manual Convert
         </button>
         
         <button class="unselectable navBtn" data-tab="detect">
-            My Timezone
+            Paste & Convert
         </button>
 
     </div>
@@ -55,7 +55,12 @@
                 </div>
 
                 <div class="section">
-                    <label for="sourceZoneSearch">From Timezone</label>
+                    <label for="sourceZoneSearch" class="labelWithInfo">
+                        From Timezone:
+                        <span class="infoIconWrapper unselectable" data-tooltip="Select the timezone you are converting FROM">
+                            <img src="/images/infoicon.svg" class="infoIcon" alt="info">
+                        </span>
+                    </label>
                     <div class="timezonePicker">
                         <div class="timezoneInputWrap">
                             <input type="text" id="sourceZoneSearch" placeholder="Search timezone..." autocomplete="off">
@@ -69,7 +74,12 @@
                 </div>
 
                 <div class="section">
-                    <label for="targetZoneSearch">To Timezone</label>
+                    <label for="targetZoneSearch" class="labelWithInfo">
+                        To Timezone:
+                        <span class="infoIconWrapper unselectable" data-tooltip="Select the timezone you are converting TO">
+                            <img src="/images/infoicon.svg" class="infoIcon" alt="info">
+                        </span>
+                    </label>
                     <div class="timezonePicker">
                         <div class="timezoneInputWrap">
                             <input type="text" id="targetZoneSearch" placeholder="Search timezone..." autocomplete="off">
@@ -103,8 +113,14 @@
                     <div id="timezone"></div>
                 </div>
 
-                <div class="section">
-                    <label for="copyPasteInput">Copy-Paste Time</label>
+                <div class="section copyPasteSection">
+                    <div class="copyPasteLabelRow">
+                        <label for="copyPasteInput">Copy-Paste Time</label>
+                        <span class="infoIconWrapper unselectable" id="openManual" aria-label="Formatting help" data-tooltip="Click here for instructions">
+                            <img src="/images/infoicon.svg" class="infoIcon" alt="info">
+                        </span>
+                    </div>
+
                     <div class="textareaWrap">
                         <textarea id="copyPasteInput"
                                 placeholder="Format as: 12:30 PM UTC, 09:00 CET, or 23:45 UTC+8"
@@ -115,7 +131,6 @@
                         </button>
                     </div>
                 </div>
-
                 <div class="section">
                     <button class="unselectable" classs="convertBtn" id="convertCopyPaste">Convert</button>
                 </div>

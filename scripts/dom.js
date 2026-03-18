@@ -30,4 +30,6 @@ export const DOM = {
     copyPasteOutput: document.getElementById("convertCopyPasteOutput"),
     clearCopyPasteButton: document.getElementById("clearCopyPasteInput"),
     copyPasteWrapper: document.querySelector(".textareaWrap"),
+
+    openManualIcon: document.getElementById("openManual"),
 };

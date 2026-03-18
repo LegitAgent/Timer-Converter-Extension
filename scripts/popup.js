@@ -90,6 +90,15 @@ function init() {
     DOM.clearTargetZoneButton?.addEventListener("click", () => {
         clearTimezonePicker(DOM.targetZoneInput, DOM.targetZoneValue, DOM.targetZoneList);
     });
+
+    DOM.openManualIcon.addEventListener("click", () => {
+        chrome.windows.create({
+            url: chrome.runtime.getURL("HTML/instructions.html"),
+            type: "popup",
+            width: 820,
+            height: 760
+        });
+    });
     
     setupTimePickerOptions();
 
