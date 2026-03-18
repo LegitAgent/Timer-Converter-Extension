@@ -3,11 +3,14 @@ import { savePopupState } from "./manageState.js";
 import { storageLocal } from "./storage.js";
 import { timezoneOffsets } from "./timezoneOffsets.js";
 
+/**
+ * sanitizes user input by removing control characters, such as /, <, >, and etc.
+ * @param {*} input string user time input
+ * @returns sanitized user input
+ */
 function sanitizeTimeInput(input) {
     if (typeof input !== "string") return "";
 
-    // only allow characters found in times and timezone names:
-    // numbers, colons, spaces, letters, slashes, plus/minus, and underscores.
     // this automatically blocks < > " ' ` and all control characters.
     let clean = input.replace(/[^a-zA-Z0-9\s:/+_\-]/g, "");
 
@@ -16,7 +19,14 @@ function sanitizeTimeInput(input) {
     return clean;
 }
 
+/**
+ * processes a time string by checking for an "inline" format (e.g., "6:00PM" or "1230AM").
+ * @param {*} time time input from user i.e. 12:00
+ * @param {*} ampm AM/PM user input or AM/PM section (undefined for military time)
+ * @returns 
+ */
 function extractTimeParts(time, ampm) {
+    // matches 1-4 digits (with or without a colon) immediately followed by AM or PM (case-insensitive)
     const inline = time.match(/^(\d{1,2}(?::\d{2})?|\d{3,4})(AM|PM)$/i);
 
     if (inline) {
@@ -27,13 +37,18 @@ function extractTimeParts(time, ampm) {
     }
 
     return {
-        time,
+        time: time,
         ampm: ampm?.toUpperCase()
     };
 }
 
 // STANDARD FORMAT: TIME [AM/PM] TIMEZONE
-function checkStandardFormat(str) {
+/**
+ * puts the sections in standard format (TIME, [AM/PM (optional)], TIMEZONE)
+ * @param {*} str user time input
+ * @returns map of user input sections: (time: Time, ampm: AM/PM, tz: timezone)
+ */
+function getStandardFormat(str) {
     const regex = /^(?<time>\S+)(?:\s+(?<ampm>\S+))?\s+(?<tz>\S+)$/i;
     const match = str.trim().match(regex);
 
@@ -51,7 +66,12 @@ function checkStandardFormat(str) {
 }
 
 // REVERSE FORMAT: TIMEZONE TIME [AM/PM]
-function checkReverseFormat(str) {
+/**
+ * puts the sections in reverse format (TIMEZONE, TIME, [AM/PM (optional)])
+ * @param {*} str user time input
+ * @returns map of user input sections: (time: Time, ampm: AM/PM, tz: timezone)
+ */
+function getReverseFormat(str) {
     const regex = /^(?<tz>\S+)\s+(?<time>\S+)(?:\s+(?<ampm>\S+))?$/i;
     const match = str.trim().match(regex);
 
@@ -253,6 +273,27 @@ function convertToLocal(fromTime, toTime) {
     return `${displayHour}:${displayMinute} ${displayAMPM}${dayText} in ${toTime.zoneName}`;
 }
 
+function isValid(map) {
+    const validTimezone = isValidTimezone(map.tz);
+    if (!validTimezone) {
+        DOM.copyPasteOutput.innerHTML = "<b>Invalid time zone.</b>";
+        return false;
+    }
+
+    const validAMPM = isValidAMPM(map.ampm);
+    if (!validAMPM) {
+        DOM.copyPasteOutput.innerHTML = "<b>Invalid AM/PM format.</b>";
+        return false;
+    }
+
+    const validTime = isValidTime(map.time, map.ampm);
+    if (!validTime) {
+        DOM.copyPasteOutput.innerHTML = "<b>Invalid time or invalid time format.</b>";
+        return false;
+    }
+    return true;
+}
+
 export async function convertPastedTime() {
     const { timezone_now } = await storageLocal.get("timezone_now");
     if (!timezone_now) {
@@ -262,36 +303,27 @@ export async function convertPastedTime() {
     
     try {
         const sanitizedText = sanitizeTimeInput(DOM.copyPasteInput.value);
-        const valid = checkStandardFormat(sanitizedText) || checkReverseFormat(sanitizedText);
-        if (!valid) {
+        const isStandard = getStandardFormat(sanitizedText);
+        const isReverse = getReverseFormat(sanitizedText);
+
+        let validMap = isStandard || isReverse;
+
+        if (!validMap) {
             DOM.copyPasteOutput.innerHTML = "Invalid format, use format:<br> <b>(00:00) (AM/PM optional) (time zone)</b> <br> or <br> <b>(time zone) (00:00) (AM/PM optional)</b>";
             savePopupState();
-            return;
-        }
-        
-        const validTimezone = isValidTimezone(valid.tz);
-        if (!validTimezone) {
-            DOM.copyPasteOutput.innerHTML = "<b>Invalid time zone.</b>";
-            savePopupState();
-            return;
+            return false;
         }
 
-        const validAMPM = isValidAMPM(valid.ampm);
-        if (!validAMPM) {
-            DOM.copyPasteOutput.innerHTML = "<b>Invalid AM/PM format.</b>";
-            savePopupState();
-            return;
+        if (isValid(isStandard)) {
+            validMap = isStandard;
+            const convertedTime = convertToLocal(validMap, timezone_now);
+            DOM.copyPasteOutput.innerHTML = `${convertedTime}`;
+        } else if (isValid(isReverse)) {
+            validMap = isReverse;
+            const convertedTime = convertToLocal(validMap, timezone_now);
+            DOM.copyPasteOutput.innerHTML = `${convertedTime}`;
         }
 
-        const validTime = isValidTime(valid.time, valid.ampm);
-        if (!validTime) {
-            DOM.copyPasteOutput.innerHTML = "<b>Invalid time or invalid time format.</b>";
-            savePopupState();
-            return;
-        }
-
-        const convertedTime = convertToLocal(valid, timezone_now);
-        DOM.copyPasteOutput.innerHTML = `${convertedTime}`;
         savePopupState();
     } catch (error) {
         console.error(error);

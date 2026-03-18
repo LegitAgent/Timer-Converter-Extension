@@ -61,8 +61,14 @@ export function convertTime() {
         
         let currentTotalMinutes = (hour * 60) + minute;
 
-        // calculate offset (gmtOffset is usually in seconds, convert to minutes)
-        const offsetDiffMinutes = (targetData.gmtOffset - sourceData.gmtOffset) / 60;
+        let sourceOffset = sourceData.gmtOffset;
+        let targetOffset = targetData.gmtOffset;
+
+        // if your data includes a DST flag (0 or 1)
+        if (sourceData.dst === 1) sourceOffset += 3600;
+        if (targetData.dst === 1) targetOffset += 3600;
+
+        const offsetDiffMinutes = (targetOffset - sourceOffset) / 60;
         let targetTotalMinutes = currentTotalMinutes + offsetDiffMinutes;
 
         // determine Day Shift (-1, 0, or 1)
