@@ -42,44 +42,44 @@ export async function restoreState() {
         const { popupState } = await storageLocal.get("popupState");
         if (!popupState) return;
 
-        if(popupState.windowID) {
+        if(popupState.windowID != null) {
             DOM.windowID = popupState.windowID;
         }
 
-        if (popupState.cachedCopyPasteInput) {
+        if (popupState.cachedCopyPasteInput != null) {
             DOM.copyPasteInput.value = popupState.cachedCopyPasteInput;
         }
 
-        if(popupState.cachedSourceZoneInput && popupState.cachedSourceZoneValue) {
+        if(popupState.cachedSourceZoneInput != null && popupState.cachedSourceZoneValue != null) {
             DOM.sourceZoneInput.value = popupState.cachedSourceZoneInput;
             DOM.sourceZoneValue.value = popupState.cachedSourceZoneValue;
         }
 
-        if(popupState.cachedTargetZoneInput && popupState.cachedTargetZoneValue) {
+        if(popupState.cachedTargetZoneInput != null && popupState.cachedTargetZoneValue != null) {
             DOM.targetZoneInput.value = popupState.cachedTargetZoneInput;
             DOM.targetZoneValue.value = popupState.cachedTargetZoneValue;
         }
 
-        if(popupState.cachedHour && popupState.cachedMinute && popupState.cachedAMPM) {
+        if(popupState.cachedHour != null && popupState.cachedMinute != null && popupState.cachedAMPM != null) {
             DOM.hourPicker.value = popupState.cachedHour;
             DOM.minutePicker.value = popupState.cachedMinute;
             DOM.ampmPicker.value = popupState.cachedAMPM;
         }
 
-        if (popupState.timezoneOut) {
+        if (popupState.timezoneOut != null) {
             DOM.timezoneDiv.textContent = popupState.timezoneOut;
         }
 
-        if(popupState.cachedConvertOutput) {
+        if(popupState.cachedConvertOutput != null) {
             DOM.convertOutput.innerHTML = popupState.cachedConvertOutput;
         }
         updateCopyPasteClearButton();
 
-        if(popupState.cachedCopyPasteOutput) {
+        if(popupState.cachedCopyPasteOutput != null) {
             DOM.copyPasteOutput.innerHTML = popupState.cachedCopyPasteOutput;
         }
 
-        if (popupState.tab) {
+        if (popupState.tab != null) {
             const savedTabBtn = document.querySelector(`.navBtn[data-tab="${popupState.tab}"]`);
             savedTabBtn?.click();
         }

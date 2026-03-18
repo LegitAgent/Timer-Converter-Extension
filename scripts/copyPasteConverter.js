@@ -180,61 +180,60 @@ function isValidTime(time, ampm) {
     return !!getHoursAndMinutes(time, ampm); // !! == truthy if != undefined, else falsy
 }
 
+// arbitrary calculation for DST of a given date
+/**
+ * determines if daylight savings is currently active in North America given a date
+ * @param {Date} date a date
+ * @returns if the given date has daylight savings in North America
+ */
+function isNorthAmericaDST(date) {
+    const year = date.getFullYear();
+
+    // Second Sunday in March, 2:00 AM 
+    const march1 = new Date(year, 2, 1);
+    const firstSundayOffsetMarch = (7 - march1.getDay()) % 7;
+    const secondSundayMarch = 1 + firstSundayOffsetMarch + 7;
+    const dstStart = new Date(year, 2, secondSundayMarch, 2, 0, 0);
+
+    // First Sunday in November, 2:00 AM
+    const nov1 = new Date(year, 10, 1);
+    const firstSundayOffsetNov = (7 - nov1.getDay()) % 7;
+    const firstSundayNov = 1 + firstSundayOffsetNov;
+    const dstEnd = new Date(year, 10, firstSundayNov, 2, 0, 0);
+
+    return date >= dstStart && date < dstEnd;
+}
+
+/**
+ * determines if daylight savings is currently active in Australia given a date
+ * @param {Date} date a date
+ * @returns if the given date has daylight savings in Australia
+ */
+function isAustraliaDST(date) {
+    const year = date.getFullYear();
+
+    // First Sunday in October, 2:00 AM
+    const oct1 = new Date(year, 9, 1);
+    const firstSundayOffsetOct = (7 - oct1.getDay()) % 7;
+    const firstSundayOct = 1 + firstSundayOffsetOct;
+    const dstStart = new Date(year, 9, firstSundayOct, 2, 0, 0);
+
+    // First Sunday in April, 3:00 AM
+    const apr1 = new Date(year, 3, 1);
+    const firstSundayOffsetApr = (7 - apr1.getDay()) % 7;
+    const firstSundayApr = 1 + firstSundayOffsetApr;
+    const dstEnd = new Date(year, 3, firstSundayApr, 3, 0, 0);
+
+    // Southern hemisphere DST spans across year end
+    return date >= dstStart || date < dstEnd;
+}
+
 /**
  * checks to see if the given time zone has daylight savings
  * @param {string} tz a time zone abbreviation (e.g. PST, CEST, CET, etc.)
  * @returns {Boolean} if the time zome given has daylight savings
  */
 function checkDaylightSavings(tz) {
-
-    // arbitrary calculation for DST of a given date
-    /**
-     * determines if daylight savings is currently active in North America given a date
-     * @param {Date} date a date
-     * @returns if the given date has daylight savings in North America
-     */
-    function isNorthAmericaDST(date) {
-        const year = date.getFullYear();
-
-        // Second Sunday in March, 2:00 AM 
-        const march1 = new Date(year, 2, 1);
-        const firstSundayOffsetMarch = (7 - march1.getDay()) % 7;
-        const secondSundayMarch = 1 + firstSundayOffsetMarch + 7;
-        const dstStart = new Date(year, 2, secondSundayMarch, 2, 0, 0);
-
-        // First Sunday in November, 2:00 AM
-        const nov1 = new Date(year, 10, 1);
-        const firstSundayOffsetNov = (7 - nov1.getDay()) % 7;
-        const firstSundayNov = 1 + firstSundayOffsetNov;
-        const dstEnd = new Date(year, 10, firstSundayNov, 2, 0, 0);
-
-        return date >= dstStart && date < dstEnd;
-    }
-
-    /**
-     * determines if daylight savings is currently active in Australia given a date
-     * @param {Date} date a date
-     * @returns if the given date has daylight savings in Australia
-     */
-    function isAustraliaDST(date) {
-        const year = date.getFullYear();
-
-        // First Sunday in October, 2:00 AM
-        const oct1 = new Date(year, 9, 1);
-        const firstSundayOffsetOct = (7 - oct1.getDay()) % 7;
-        const firstSundayOct = 1 + firstSundayOffsetOct;
-        const dstStart = new Date(year, 9, firstSundayOct, 2, 0, 0);
-
-        // First Sunday in April, 3:00 AM
-        const apr1 = new Date(year, 3, 1);
-        const firstSundayOffsetApr = (7 - apr1.getDay()) % 7;
-        const firstSundayApr = 1 + firstSundayOffsetApr;
-        const dstEnd = new Date(year, 3, firstSundayApr, 3, 0, 0);
-
-        // Southern hemisphere DST spans across year end
-        return date >= dstStart || date < dstEnd;
-    }
-
     const zone = String(tz).toUpperCase().trim();
     const today = new Date();
 
@@ -370,6 +369,8 @@ export async function convertPastedTime() {
             validMap = isReverse;
             const convertedTime = convertToLocal(validMap, timezone_now);
             DOM.copyPasteOutput.innerHTML = `${convertedTime}`;
+        } else {
+            return 1;
         }
 
         savePopupState();

@@ -121,7 +121,7 @@ function init() {
 
     handleTimezoneListRequest();
     restoreState();
-
+    
     DOM.openManualIcon.addEventListener("click", () => {
         if (DOM.windowID) {
             // check if window still exists before focusing

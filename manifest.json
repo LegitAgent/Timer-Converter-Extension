@@ -15,7 +15,8 @@
     },
     "permissions": [
         "geolocation",
-        "storage"
+        "storage",
+        "windows"
     ],
     "background": {
         "service_worker": "scripts/background.js"
