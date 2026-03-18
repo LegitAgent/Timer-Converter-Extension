@@ -5,9 +5,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     let url = '';
     if (msg.action === "getTimezone") {
         const {latitude, longitude} = msg;
-        url = `https://timezone-server.onrender.com/timezone?latitude=${latitude}&longitude=${longitude}`;
+        url = `https://timezone-proxy.albamartindarius.workers.dev/timezone?latitude=${latitude}&longitude=${longitude}`;
     } else if (msg.action === "getTimezoneList") {
-        url = `https://timezone-server.onrender.com/listtimezones`
+        url = `https://timezone-proxy.albamartindarius.workers.dev/listtimezones`
     } else {
         sendResponse({ success: false, error: "Unknown action" });
         return;

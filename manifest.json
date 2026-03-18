@@ -3,6 +3,7 @@
     "name": "Time Converter Extension",
     "version": "1.0",
     "description": "A simple time converting extension, that either converts time directly from a page or inputting a time zone to be converted.",
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxL8VwsHrGvsuxgIh9+iSWAmzWRg42Q8uP4J70cFDdyrzlDBjdox13fg/KN7GqM3DBFIG/1s4UJefjqmj0QNRLjcpmrBfBmS7qSpWLKZRCF1FGfbWut4d+5oJdSzz8/gFZsQDs82jqtjRuIsudzwtTQ+zCwFs0rE/WYowuZWCGpPRjLFbhqVIGqsv5vb8ix1kijZf+dGaYxCVrcwSDA/9y1+3NIT6qfIfoZQTQYsU8myQP84twag7ox5CV/CYUrgGDjounCZJjbbtVN4FxCP+pX+cZ36S/a9qTZqn+vaMwrvRMXjvrq0g93XjuhRVohrAyYrqDYIMSGmSDnDZmGGH9QIDAQAB",
     "icons": {
         "16": "images/timeconverter-icon-16.png",
         "32": "images/timeconverter-icon-32.png",
@@ -18,5 +19,8 @@
     ],
     "background": {
         "service_worker": "scripts/background.js"
-    }
+    },
+    "host_permissions": [
+        "https://timezone-proxy.albamartindarius.workers.dev/*"
+    ]
 }
