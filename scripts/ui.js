@@ -1,5 +1,6 @@
 import { DOM } from "./dom.js";
 import { savePopupState } from "./manageState.js";
+import { getHoursAndMinutes, extractTimeParts, sanitizeTimeInput } from "./copyPasteConverter.js";
 
 /**
  * edits the button div to have a "success" UI.
@@ -34,30 +35,46 @@ export function clearCopyPasteInput() {
     DOM.copyPasteInput.focus();
 }
 
-/**
- * sets up the picker for the time in converting time zones.
- */
-export function setupTimePickerOptions() {
-    for (let i = 1; i <= 12; i++) {
-        const opt = document.createElement("option");
-        opt.value = String(i).padStart(2, "0");
-        opt.textContent = opt.value;
-        DOM.hourPicker.appendChild(opt);
-    }
+// /**
+//  * sets up the picker for the time in converting time zones.
+//  */
+// export function setupTimePickerOptions() {
+//     for (let i = 1; i <= 12; i++) {
+//         const opt = document.createElement("option");
+//         opt.value = String(i).padStart(2, "0");
+//         opt.textContent = opt.value;
+//         DOM.hourPicker.appendChild(opt);
+//     }
 
-    for (let i = 0; i < 60; i += 5) {
-        const opt = document.createElement("option");
-        opt.value = String(i).padStart(2, "0");
-        opt.textContent = opt.value;
-        DOM.minutePicker.appendChild(opt);
-    }
+//     for (let i = 0; i < 60; i += 5) {
+//         const opt = document.createElement("option");
+//         opt.value = String(i).padStart(2, "0");
+//         opt.textContent = opt.value;
+//         DOM.minutePicker.appendChild(opt);
+//     }
+// }
+
+function isStandard(str) {
+    const regex = /^(?<time>\S+)(?:\s+(?<ampm>\S+))?$/i;
+    const match = str.trim().match(regex);
+
+    if (!match) return false;
+
+    let { time, ampm } = match.groups;
+
+    const parts = extractTimeParts(time, ampm);
+
+    return {
+        time: parts.time,
+        ampm: parts.ampm,
+    };
 }
 
 // limitation: if you convert time at exactly where DST is affected and you did not quit/restart the extension session, it will still presume DST and vice versa.
 // to limit free API calls ^^^^
 /**
  * converts the time from the source zone to the target zone.
- * @returns nothing if either sources are not valid
+ * @returns nothing if any of the sources are not valid
  */
 export function convertTime() {
     try {
@@ -70,14 +87,25 @@ export function convertTime() {
         // parse inputs
         const sourceData = JSON.parse(DOM.sourceZoneValue.value);
         const targetData = JSON.parse(DOM.targetZoneValue.value);
-        let hour = Number(DOM.hourPicker.value);
-        const minute = Number(DOM.minutePicker.value);
 
-        // normalize to 24-hour minutes (0 to 1439)
-        if (DOM.ampmPicker.value === "PM" && hour !== 12) hour += 12;
-        if (DOM.ampmPicker.value === "AM" && hour === 12) hour = 0;
+        const sanitizedText = sanitizeTimeInput(DOM.inputTimeConvert.value);
+        let convertedTime = isStandard(sanitizedText);
+
+        if (!convertedTime) {
+            DOM.convertOutput.textContent = "Please enter a valid time. Format is: HH:MM AM/PM";
+            return;
+        }
+
+        const parsedTime = getHoursAndMinutes(convertedTime.time, convertedTime.ampm);
+
+        if (!parsedTime) {
+            DOM.convertOutput.textContent = "Please enter a valid time. Format is: HH:MM AM/PM";
+            return;
+        }
+
+        const {hours, minutes} = parsedTime;
         
-        let currentTotalMinutes = (hour * 60) + minute;
+        let currentTotalMinutes = (hours * 60) + minutes;
 
         let sourceOffset = sourceData.gmtOffset;
         let targetOffset = targetData.gmtOffset;
@@ -103,8 +131,8 @@ export function convertTime() {
         const ampm = h24 >= 12 ? "PM" : "AM";
         const h12 = (h24 % 12) || 12; // If 0, result is 12
 
-        let UTCDisplacementSource = Math.floor(sourceData.gmtOffset / 3600);
-        let UTCDisplacementTarget = Math.floor(targetData.gmtOffset / 3600);
+        let UTCDisplacementSource = sourceData.gmtOffset / 3600;
+        let UTCDisplacementTarget = targetData.gmtOffset / 3600;
 
         if(UTCDisplacementSource >= 0) {
             UTCDisplacementSource = "+" + UTCDisplacementSource;

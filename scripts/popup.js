@@ -1,7 +1,7 @@
 import { DOM } from "./dom.js";
 import { storageLocal, storageSession } from "./storage.js";
 import { savePopupState, restoreState } from "./manageState.js";
-import { applyTimezoneUI, updateCopyPasteClearButton, clearCopyPasteInput, setupTimePickerOptions,
+import { applyTimezoneUI, updateCopyPasteClearButton, clearCopyPasteInput,
          convertTime, clearTimezonePicker } from "./ui.js";
 import { getLocation, fetchTimezone, fetchTimezoneList } from "./api.js";
 import { initCustomDropdowns } from "./timezonePicker.js";
@@ -102,9 +102,7 @@ function init() {
     
     DOM.locationButton.addEventListener("click", handleLocationRequest);
 
-    DOM.hourPicker.addEventListener("change", savePopupState);
-    DOM.minutePicker.addEventListener("change", savePopupState);
-    DOM.ampmPicker.addEventListener("change", savePopupState);
+    DOM.inputTimeConvert.addEventListener("change", savePopupState);
 
     DOM.convertButton.addEventListener("click", convertTime);
     DOM.copyPasteConvertButton.addEventListener("click", convertPastedTime);
@@ -117,7 +115,7 @@ function init() {
         clearTimezonePicker(DOM.targetZoneInput, DOM.targetZoneValue, DOM.targetZoneList);
     });
     
-    setupTimePickerOptions();
+    // setupTimePickerOptions();
 
     handleTimezoneListRequest();
     restoreState();

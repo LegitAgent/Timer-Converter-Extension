@@ -8,7 +8,7 @@ import { timezoneOffsets } from "./timezoneOffsets.js";
  * @param {string} input string user time input
  * @returns sanitized user input
  */
-function sanitizeTimeInput(input) {
+export function sanitizeTimeInput(input) {
     if (typeof input !== "string") return "";
 
     // this automatically blocks < > " ' ` and all control characters.
@@ -20,16 +20,16 @@ function sanitizeTimeInput(input) {
 }
 
 /**
- * processes a time string by checking for an "inline" format (e.g., "6:00PM" or "1230AM").
+ * processes a time string by checking for an "inline" format (e.g., "6:00PM" or "1230 AM").
  * @param {string} time time input from user i.e. 12:00
  * @param {string} ampm AM/PM user input or AM/PM section (undefined for military time)
  * @returns 
  */
-function extractTimeParts(time, ampm) {
+export function extractTimeParts(time, ampm) {
     // matches 1-4 digits (with or without a colon) immediately followed by AM or PM (case-insensitive)
     const inline = time.match(/^(\d{1,2}(?::\d{2})?|\d{3,4})(AM|PM)$/i);
 
-    if (inline) {
+    if (inline && ampm === undefined) {
         return {
             time: inline[1],
             ampm: inline[2].toUpperCase()
@@ -101,7 +101,7 @@ function isValidTimezone(tz) {
  * @param {string} ampm a string for the ampm section
  * @returns {Boolean} if the given string is in valid AM/PM format
  */
-function isValidAMPM(ampm) {
+export function isValidAMPM(ampm) {
     if (ampm === undefined) return true;
     return ampm === "AM" || ampm === "PM";
 }
@@ -112,7 +112,7 @@ function isValidAMPM(ampm) {
  * @param {string} ampm a string for the ampm section
  * @returns {(Object | Boolean)} an Object literal if it is a valid set of strings (hours and minutes), and false if it is not
  */
-function getHoursAndMinutes(time, ampm) {
+export function getHoursAndMinutes(time, ampm) {
     // supports:
     // 8
     // 08
@@ -154,13 +154,12 @@ function getHoursAndMinutes(time, ampm) {
     if (ampm) {
         const upperAMPM = ampm.toUpperCase();
 
-        if (upperAMPM !== "AM" && upperAMPM !== "PM") return false;
         if (hours < 1 || hours > 12) return false;
 
         // then convert to 24-hour time
         if (upperAMPM === "AM") {
             if (hours === 12) hours = 0;
-        } else {
+        } else if(upperAMPM === "PM"){
             if (hours !== 12) hours += 12;
         }
     } else {
@@ -176,7 +175,7 @@ function getHoursAndMinutes(time, ampm) {
  * @param {string} ampm a string for the ampm section
  * @returns 
  */
-function isValidTime(time, ampm) {
+export function isValidTime(time, ampm) {
     return !!getHoursAndMinutes(time, ampm); // !! == truthy if != undefined, else falsy
 }
 
@@ -314,27 +313,37 @@ function convertToLocal(fromTime, toTime) {
 /**
  * checks to see if a given Object is valid.
  * @param {Object} map an Object with keys = {tz, ampm, time}
- * @returns if the given Object has valid formatting for each key
+ * @returns if the given Object has valid formatting for each key, if not return an array that indicates how soon it was wrong compared to standard format, higher = likely standard format
  */
 function isValid(map) {
-    const validTimezone = isValidTimezone(map.tz);
-    if (!validTimezone) {
-        DOM.copyPasteOutput.innerHTML = "<b>Invalid time zone.</b>";
-        return false;
-    }
+    const validTime = isValidTime(map.time, map.ampm);
+    if (!validTime) return [false, 1];
 
     const validAMPM = isValidAMPM(map.ampm);
-    if (!validAMPM) {
+    if (!validAMPM) return [false, 2];
+
+    const validTimezone = isValidTimezone(map.tz);
+    if (!validTimezone) return [false, 3];
+
+    return [true, 0];
+}
+
+/**
+ * checks for which error occured.
+ * @param {*} idx the index error message
+ */
+function errorMessage(idx) {
+    if (idx == 1) {
+        DOM.copyPasteOutput.innerHTML = "<b>Invalid time or invalid time format.</b>";
+    } else if (idx == 2) {
         DOM.copyPasteOutput.innerHTML = "<b>Invalid AM/PM format.</b>";
-        return false;
+    } else if (idx == 3) {
+        DOM.copyPasteOutput.innerHTML = "<b>Invalid time zone.</b>";
+    } else { // default
+        DOM.copyPasteOutput.innerHTML = "Error"
     }
 
-    const validTime = isValidTime(map.time, map.ampm);
-    if (!validTime) {
-        DOM.copyPasteOutput.innerHTML = "<b>Invalid time or invalid time format.</b>";
-        return false;
-    }
-    return true;
+    return 1;
 }
 
 /**
@@ -361,19 +370,24 @@ export async function convertPastedTime() {
             return false;
         }
 
-        if (isValid(isStandard)) {
+        const validStandard = isValid(isStandard);
+        const validReverse = isValid(isReverse);
+
+        if (validStandard[0]) {
             validMap = isStandard;
             const convertedTime = convertToLocal(validMap, timezone_now);
             DOM.copyPasteOutput.innerHTML = `${convertedTime}`;
-        } else if (isValid(isReverse)) {
+        } else if (validReverse[0]) {
             validMap = isReverse;
             const convertedTime = convertToLocal(validMap, timezone_now);
             DOM.copyPasteOutput.innerHTML = `${convertedTime}`;
         } else {
-            return 1;
+            const moreLikely = validStandard[1] > validReverse[1] ? validStandard[1] : validReverse[1];
+            errorMessage(moreLikely);
         }
 
         savePopupState();
+        return 1;
     } catch (error) {
         console.error(error);
     }

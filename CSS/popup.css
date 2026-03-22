@@ -25,7 +25,20 @@ body {
 
 /* Hide scrollbars for Chrome/Safari/Webkit */
 ::-webkit-scrollbar {
-  display: none;
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 
 .unselectable {
@@ -162,39 +175,6 @@ button:hover {
 }
 
 /* ===== 6. TIME & TIMEZONE PICKER COMPONENTS ===== */
-.standardTimeInput {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.time-picker-select {
-  flex: 1;
-  padding: 9px 8px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: #1e293b;
-  color: #e2e8f0;
-  font-size: 0.85rem;
-  outline: none;
-  cursor: pointer;
-  transition: border 0.2s ease, box-shadow 0.2s ease;
-}
-
-#ampmSelector {
-  flex: 0.6;
-}
-
-.time-separator {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #94a3b8;
-}
-
-.timezonePicker {
-  position: relative;
-  width: 100%;
-}
 
 .timezoneList {
   margin-top: 6px;
@@ -295,29 +275,29 @@ button:hover {
   content: attr(data-tooltip);
   position: absolute;
 
-  bottom: 140%;
-  left: 0; 
-  transform: none; 
+  top: 140%;      /* 👈 switch from bottom → top */
+  left: 0;
 
   background: #222;
   color: #fff;
   padding: 8px 10px;
   border-radius: 6px;
+
   font-size: 11px;
   line-height: 1.4;
 
   width: max-content;
   max-width: 150px;
+
   white-space: normal;
   overflow-wrap: break-word;
-
   text-align: left;
 
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
 
-  z-index: 1000;
+  z-index: 2000;
 }
 
 .infoIconWrapper:hover::after {
@@ -328,6 +308,23 @@ button:hover {
   width: 14px;
   height: 14px;
   display: block;
+}
+
+.infoIconWrapper::before {
+  content: "";
+  position: absolute;
+  top: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: #222;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.infoIconWrapper:hover::before,
+.infoIconWrapper:hover::after {
+  opacity: 1;
 }
 
 /* Make label relative to contain tooltip */

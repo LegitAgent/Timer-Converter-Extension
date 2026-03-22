@@ -20,9 +20,7 @@ export const DOM = {
     targetZoneList: document.getElementById("targetZoneList"),
     clearTargetZoneButton: document.getElementById("clearTargetZone"),
     
-    hourPicker: document.getElementById("hourSelector"),
-    minutePicker: document.getElementById("minuteSelector"),
-    ampmPicker: document.getElementById("ampmSelector"),
+    inputTimeConvert: document.getElementById("convertTimeInput"),
 
     convertButton: document.getElementById("convertTimeZone"),
     convertOutput: document.getElementById("convertTimeZoneOutput"),

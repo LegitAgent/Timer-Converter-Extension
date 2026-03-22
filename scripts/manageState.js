@@ -20,9 +20,7 @@ export async function savePopupState() {
                 cachedSourceZoneValue: DOM.sourceZoneValue.value,
                 cachedTargetZoneInput: DOM.targetZoneInput.value,
                 cachedTargetZoneValue: DOM.targetZoneValue.value,
-                cachedHour: DOM.hourPicker.value,
-                cachedMinute: DOM.minutePicker.value,
-                cachedAMPM: DOM.ampmPicker.value,
+                cachedInputTimeConvert: DOM.inputTimeConvert.value,
                 cachedConvertOutput: DOM.convertOutput.innerHTML,
                 cachedCopyPasteOutput: DOM.copyPasteOutput.innerHTML
             }
@@ -60,10 +58,8 @@ export async function restoreState() {
             DOM.targetZoneValue.value = popupState.cachedTargetZoneValue;
         }
 
-        if(popupState.cachedHour != null && popupState.cachedMinute != null && popupState.cachedAMPM != null) {
-            DOM.hourPicker.value = popupState.cachedHour;
-            DOM.minutePicker.value = popupState.cachedMinute;
-            DOM.ampmPicker.value = popupState.cachedAMPM;
+        if(popupState.cachedInputTimeConvert != null) {
+            DOM.inputTimeConvert.value = popupState.cachedInputTimeConvert;
         }
 
         if (popupState.timezoneOut != null) {
