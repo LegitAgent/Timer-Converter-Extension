@@ -25,7 +25,8 @@
         "type": "module"
     },
     "host_permissions": [
-        "https://timezone-proxy.albamartindarius.workers.dev/*"
+        "https://timezone-proxy.albamartindarius.workers.dev/*",
+        "<all_urls>"
     ],
     "commands": {
         "_execute_action": {

@@ -157,3 +157,64 @@ export function clearTimezonePicker(inputEl, hiddenEl, listEl) {
     savePopupState();
     inputEl.focus();
 }
+
+/**
+ * initializes the extension toggle and adds a change listener that updates UI state, saves it, and applies the toggle behavior to the current tab.
+ */
+export function setupExtensionToggle() {
+    if (!DOM.extensionToggle) return;
+
+    DOM.extensionToggle.addEventListener("change", async () => {
+        const enabled = DOM.extensionToggle.checked;
+        await savePopupState();
+
+        if (DOM.toggleStatusText) {
+            DOM.toggleStatusText.textContent = enabled ? "ON" : "OFF";
+            DOM.toggleStatusText.style.color = enabled ? "#22c55e" : "#94a3b8";
+        }
+
+        try {
+            // chrome.tabs.query returns an array of matching tabs.
+            // destructuring ([tab]) extracts the first (active) tab object.
+            const [tab] = await chrome.tabs.query({
+                active: true,
+                currentWindow: true
+            });
+
+            // restrictions
+            if (
+                !tab?.id ||
+                !tab.url ||
+                tab.url.startsWith("chrome://") ||
+                tab.url.startsWith("edge://") ||
+                tab.url.startsWith("about:") ||
+                tab.url.startsWith("chrome-extension://")
+            ) {
+                console.log("Cannot inject into this tab.");
+                return;
+            }
+
+            // inject the controller script
+            await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: ["scripts/test.js"]
+            });
+
+            // execute a function inside the page that sends a message to the content script
+            await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: (enabledNow) => {
+                    window.postMessage({
+                        type: "TIME_EXTENSION_TOGGLE",
+                        enabled: enabledNow
+                    }, "*");
+                },
+                args: [enabled] // pass the enabled var into the injecyed function as a param
+            });
+
+            console.log(`Page toggle sent: ${enabled ? "ON" : "OFF"}`);
+        } catch (error) {
+            console.error("Immediate popup injection failed:", error);
+        }
+    });
+}

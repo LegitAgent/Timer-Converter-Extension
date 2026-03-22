@@ -2,7 +2,7 @@ import { DOM } from "./dom.js";
 import { storageLocal, storageSession } from "./storage.js";
 import { savePopupState, restoreState } from "./manageState.js";
 import { applyTimezoneUI, updateCopyPasteClearButton, clearCopyPasteInput,
-         convertTime, clearTimezonePicker } from "./ui.js";
+         convertTime, clearTimezonePicker, setupExtensionToggle } from "./ui.js";
 import { getLocation, fetchTimezone, fetchTimezoneList } from "./api.js";
 import { initCustomDropdowns } from "./timezonePicker.js";
 import { setUpTabs } from "./tabs.js";
@@ -81,31 +81,12 @@ function createInstructionWindow() {
  * checks if the window removed was the windowID, if so set windowID to null.
  */
 chrome.windows.onRemoved.addListener((closedId) => {
-    if (DOM.windowID && closedId === DOM.windowID) {
+    if (closedId === DOM.windowID) {
         console.log("Manual window closed.");
         DOM.windowID = null; 
         savePopupState();
     }
 });
-
-function setupExtensionToggle() {
-    if (!DOM.extensionToggle) return;
-
-    DOM.extensionToggle.addEventListener("change", async () => {
-        const enabled = DOM.extensionToggle.checked;
-
-        // save using your popupState system
-        await savePopupState();
-
-        // update UI text
-        if (DOM.toggleStatusText) {
-            DOM.toggleStatusText.textContent = enabled ? "ON" : "OFF";
-            DOM.toggleStatusText.style.color = enabled ? "#22c55e" : "#94a3b8";
-        }
-
-        console.log(`Extension toggle is now ${enabled ? "ON" : "OFF"}`);
-    });
-}
 
 /**
  * initialization of the popup
