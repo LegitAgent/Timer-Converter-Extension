@@ -7,12 +7,23 @@ import { getHoursAndMinutes, extractTimeParts, sanitizeTimeInput } from "./copyP
  * @param {Object} timezone a time zone object from the user location
  */
 export function applyTimezoneUI(timezone) {
-    DOM.timezoneDiv.textContent = timezone.zoneName;
-    DOM.timezoneDiv.classList.add("success");
+    DOM.timezoneOutput.textContent = timezone.zoneName;
+    DOM.timezoneOutput.classList.add("success");
     DOM.locationButton.classList.remove("loading");
     DOM.locationButton.textContent = "Location Retrieved";
     savePopupState();
 }
+
+/**
+ * checks if the element has any text or value in it, if it doesn;t, then hide it.
+ * @param {*} el element to render
+ * @param {*} text text to check
+ */
+export function renderOutput(el, text) {
+    el.textContent = text || "";
+    el.classList.toggle("hidden", !text || !text.trim());
+}
+
 
 /**
  * updates the copy paste text area to have the trash icon.
@@ -34,25 +45,6 @@ export function clearCopyPasteInput() {
     savePopupState();
     DOM.copyPasteInput.focus();
 }
-
-// /**
-//  * sets up the picker for the time in converting time zones.
-//  */
-// export function setupTimePickerOptions() {
-//     for (let i = 1; i <= 12; i++) {
-//         const opt = document.createElement("option");
-//         opt.value = String(i).padStart(2, "0");
-//         opt.textContent = opt.value;
-//         DOM.hourPicker.appendChild(opt);
-//     }
-
-//     for (let i = 0; i < 60; i += 5) {
-//         const opt = document.createElement("option");
-//         opt.value = String(i).padStart(2, "0");
-//         opt.textContent = opt.value;
-//         DOM.minutePicker.appendChild(opt);
-//     }
-// }
 
 function isStandard(str) {
     const regex = /^(?<time>\S+)(?:\s+(?<ampm>\S+))?$/i;
@@ -129,7 +121,7 @@ export function convertTime() {
         const h24 = Math.floor(finalMinutes / 60);
         const m = String(finalMinutes % 60).padStart(2, "0");
         const ampm = h24 >= 12 ? "PM" : "AM";
-        const h12 = (h24 % 12) || 12; // If 0, result is 12
+        const h12 = (h24 % 12) || 12; // if 0, result is 12
 
         let UTCDisplacementSource = sourceData.gmtOffset / 3600;
         let UTCDisplacementTarget = targetData.gmtOffset / 3600;
@@ -142,6 +134,7 @@ export function convertTime() {
         }
 
         DOM.convertOutput.innerHTML = `From: UTC${UTCDisplacementSource} to UTC${UTCDisplacementTarget} <br> ${h12}:${m} ${ampm}${dayLabels[dayShift] || ""}`;
+
         savePopupState();
     } catch (err) {
         console.error("Conversion failed:", err);

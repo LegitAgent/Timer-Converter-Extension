@@ -15,14 +15,15 @@ export async function savePopupState() {
                 windowID: DOM.windowID,
                 tab: activeTab,
                 cachedCopyPasteInput: DOM.copyPasteInput.value,
-                timezoneOut: DOM.timezoneDiv.textContent,
+                timezoneOut: DOM.timezoneOutput.textContent,
                 cachedSourceZoneInput: DOM.sourceZoneInput.value,
                 cachedSourceZoneValue: DOM.sourceZoneValue.value,
                 cachedTargetZoneInput: DOM.targetZoneInput.value,
                 cachedTargetZoneValue: DOM.targetZoneValue.value,
                 cachedInputTimeConvert: DOM.inputTimeConvert.value,
                 cachedConvertOutput: DOM.convertOutput.innerHTML,
-                cachedCopyPasteOutput: DOM.copyPasteOutput.innerHTML
+                cachedCopyPasteOutput: DOM.copyPasteOutput.innerHTML,
+                extensionEnabled: DOM.extensionToggle?.checked ?? false,
             }
         });
     } catch(error) {
@@ -44,6 +45,15 @@ export async function restoreState() {
             DOM.windowID = popupState.windowID;
         }
 
+        if (popupState.extensionEnabled != null && DOM.extensionToggle) {
+            DOM.extensionToggle.checked = popupState.extensionEnabled;
+
+            if (DOM.toggleStatusText) {
+                DOM.toggleStatusText.textContent = popupState.extensionEnabled ? "ON" : "OFF";
+                DOM.toggleStatusText.style.color = popupState.extensionEnabled ? "#22c55e" : "#94a3b8";
+            }
+        }
+        
         if (popupState.cachedCopyPasteInput != null) {
             DOM.copyPasteInput.value = popupState.cachedCopyPasteInput;
         }
@@ -63,7 +73,7 @@ export async function restoreState() {
         }
 
         if (popupState.timezoneOut != null) {
-            DOM.timezoneDiv.textContent = popupState.timezoneOut;
+            DOM.timezoneOutput.textContent = popupState.timezoneOut;
         }
 
         if(popupState.cachedConvertOutput != null) {

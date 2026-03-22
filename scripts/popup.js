@@ -88,15 +88,36 @@ chrome.windows.onRemoved.addListener((closedId) => {
     }
 });
 
+function setupExtensionToggle() {
+    if (!DOM.extensionToggle) return;
+
+    DOM.extensionToggle.addEventListener("change", async () => {
+        const enabled = DOM.extensionToggle.checked;
+
+        // save using your popupState system
+        await savePopupState();
+
+        // update UI text
+        if (DOM.toggleStatusText) {
+            DOM.toggleStatusText.textContent = enabled ? "ON" : "OFF";
+            DOM.toggleStatusText.style.color = enabled ? "#22c55e" : "#94a3b8";
+        }
+
+        console.log(`Extension toggle is now ${enabled ? "ON" : "OFF"}`);
+    });
+}
+
 /**
  * initialization of the popup
  */
-function init() {
+async function init() {
     setUpTabs();
+
     DOM.copyPasteInput.addEventListener("input", () => {
         updateCopyPasteClearButton();
         savePopupState();
     });
+
     DOM.clearCopyPasteButton?.addEventListener("click", clearCopyPasteInput);
     updateCopyPasteClearButton();
     
@@ -115,10 +136,10 @@ function init() {
         clearTimezonePicker(DOM.targetZoneInput, DOM.targetZoneValue, DOM.targetZoneList);
     });
     
-    // setupTimePickerOptions();
+    await handleTimezoneListRequest();
+    await restoreState();
 
-    handleTimezoneListRequest();
-    restoreState();
+    setupExtensionToggle();
     
     DOM.openManualIcon.addEventListener("click", () => {
         if (DOM.windowID) {

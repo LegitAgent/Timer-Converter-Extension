@@ -327,6 +327,111 @@ button:hover {
   opacity: 1;
 }
 
+/* ===== EXTENSION TOGGLE ===== */
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.toggleTextWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggleLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.toggleSubtext {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  transition: color 0.2s ease;
+}
+
+.coolToggle {
+  position: relative;
+  display: inline-block;
+  width: 62px;
+  height: 34px;
+  flex-shrink: 0;
+}
+
+.coolToggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.coolSlider {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: all 0.25s ease;
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.35),
+    0 0 0 rgba(34,197,94,0);
+}
+
+.coolSlider::before {
+  content: "";
+  position: absolute;
+  height: 26px;
+  width: 26px;
+  left: 3px;
+  top: 3px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f8fafc, #cbd5e1);
+  box-shadow:
+    0 3px 10px rgba(0,0,0,0.35),
+    inset 0 1px 1px rgba(255,255,255,0.7);
+  transition: transform 0.25s ease;
+}
+
+.coolSlider::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.08), transparent 45%);
+  pointer-events: none;
+}
+
+.coolToggle input:checked + .coolSlider {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.18),
+    0 0 18px rgba(34,197,94,0.35);
+}
+
+.coolToggle input:checked + .coolSlider::before {
+  transform: translateX(28px);
+}
+
+.coolToggle input:focus-visible + .coolSlider {
+  outline: 2px solid rgba(34,197,94,0.5);
+  outline-offset: 2px;
+}
+
+.coolToggle:hover .coolSlider {
+  filter: brightness(1.04);
+}
+
 /* Make label relative to contain tooltip */
 .labelWithInfo {
     position: relative;
