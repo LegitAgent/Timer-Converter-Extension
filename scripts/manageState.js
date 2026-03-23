@@ -41,7 +41,7 @@ export async function restoreState() {
         const { popupState } = await storageLocal.get("popupState");
         if (!popupState) return;
 
-        if(popupState.windowID != null) {
+        if (popupState.windowID != null) {
             DOM.windowID = popupState.windowID;
         }
 
@@ -58,17 +58,17 @@ export async function restoreState() {
             DOM.copyPasteInput.value = popupState.cachedCopyPasteInput;
         }
 
-        if(popupState.cachedSourceZoneInput != null && popupState.cachedSourceZoneValue != null) {
+        if (popupState.cachedSourceZoneInput != null && popupState.cachedSourceZoneValue != null) {
             DOM.sourceZoneInput.value = popupState.cachedSourceZoneInput;
             DOM.sourceZoneValue.value = popupState.cachedSourceZoneValue;
         }
 
-        if(popupState.cachedTargetZoneInput != null && popupState.cachedTargetZoneValue != null) {
+        if (popupState.cachedTargetZoneInput != null && popupState.cachedTargetZoneValue != null) {
             DOM.targetZoneInput.value = popupState.cachedTargetZoneInput;
             DOM.targetZoneValue.value = popupState.cachedTargetZoneValue;
         }
 
-        if(popupState.cachedInputTimeConvert != null) {
+        if (popupState.cachedInputTimeConvert != null) {
             DOM.inputTimeConvert.value = popupState.cachedInputTimeConvert;
         }
 
@@ -76,12 +76,12 @@ export async function restoreState() {
             DOM.timezoneOutput.textContent = popupState.timezoneOut;
         }
 
-        if(popupState.cachedConvertOutput != null) {
+        if (popupState.cachedConvertOutput != null) {
             DOM.convertOutput.innerHTML = popupState.cachedConvertOutput;
         }
         updateCopyPasteClearButton();
 
-        if(popupState.cachedCopyPasteOutput != null) {
+        if (popupState.cachedCopyPasteOutput != null) {
             DOM.copyPasteOutput.innerHTML = popupState.cachedCopyPasteOutput;
         }
 

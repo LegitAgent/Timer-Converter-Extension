@@ -1,6 +1,8 @@
 import { DOM } from "./dom.js";
 import { savePopupState } from "./manageState.js";
 import { getHoursAndMinutes, extractTimeParts, sanitizeTimeInput } from "./copyPasteConverter.js";
+import { timezoneOffsets } from "./timezoneOffsets.js";
+import { storageLocal } from "./storage.js";
 
 /**
  * edits the button div to have a "success" UI.
@@ -16,8 +18,8 @@ export function applyTimezoneUI(timezone) {
 
 /**
  * checks if the element has any text or value in it, if it doesn;t, then hide it.
- * @param {*} el element to render
- * @param {*} text text to check
+ * @param {Element} el element to render
+ * @param {string} text text to check
  */
 export function renderOutput(el, text) {
     el.textContent = text || "";
@@ -27,7 +29,7 @@ export function renderOutput(el, text) {
 
 /**
  * updates the copy paste text area to have the trash icon.
- * @returns nothing if the wrapper is null
+ * @returns {void} nothing if the wrapper is null
  */
 export function updateCopyPasteClearButton() {
     if (!DOM.copyPasteWrapper) return;
@@ -46,6 +48,11 @@ export function clearCopyPasteInput() {
     DOM.copyPasteInput.focus();
 }
 
+/**
+ * determines if the time given is in its standard format (i.e. HH:MM (AM/PM))
+ * @param {string} str a string time format
+ * @returns {} hours and minutes if it is a valid time format
+ */
 function isStandard(str) {
     const regex = /^(?<time>\S+)(?:\s+(?<ampm>\S+))?$/i;
     const match = str.trim().match(regex);
@@ -160,20 +167,47 @@ export function clearTimezonePicker(inputEl, hiddenEl, listEl) {
 
 /**
  * initializes the extension toggle and adds a change listener that updates UI state, saves it, and applies the toggle behavior to the current tab.
+ * immediate action for the toggle on/off
  */
 export function setupExtensionToggle() {
     if (!DOM.extensionToggle) return;
 
     DOM.extensionToggle.addEventListener("change", async () => {
         const enabled = DOM.extensionToggle.checked;
-        await savePopupState();
-
-        if (DOM.toggleStatusText) {
-            DOM.toggleStatusText.textContent = enabled ? "ON" : "OFF";
-            DOM.toggleStatusText.style.color = enabled ? "#22c55e" : "#94a3b8";
-        }
 
         try {
+            const { timezone_now } = await storageLocal.get("timezone_now");
+
+            // handle not getting time zone yet
+            if (enabled && !timezone_now) {
+                DOM.extensionToggle.checked = false;
+
+                if (DOM.toggleStatusText) {
+                    DOM.toggleStatusText.textContent = "OFF";
+                    DOM.toggleStatusText.style.color = "#94a3b8";
+                }
+
+                if (DOM.toggleErrorText) {
+                    DOM.toggleErrorText.textContent = "Get your time zone first from the Paste & Convert tab!";
+                    DOM.toggleErrorText.classList.remove("hidden");
+                }
+
+                await savePopupState();
+                return;
+            }
+
+            if (DOM.toggleErrorText) {
+                DOM.toggleErrorText.textContent = "";
+                DOM.toggleErrorText.classList.add("hidden");
+            }
+
+            await savePopupState();
+
+            if (DOM.toggleStatusText) {
+                DOM.toggleStatusText.textContent = enabled ? "ON" : "OFF";
+                DOM.toggleStatusText.style.color = enabled ? "#22c55e" : "#94a3b8";
+            }
+
             // chrome.tabs.query returns an array of matching tabs.
             // destructuring ([tab]) extracts the first (active) tab object.
             const [tab] = await chrome.tabs.query({
@@ -197,19 +231,19 @@ export function setupExtensionToggle() {
             // inject the controller script
             await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
-                files: ["scripts/test.js"]
+                files: ["scripts/timezoneDetectScript.js"]
             });
 
-            // execute a function inside the page that sends a message to the content script
-            await chrome.scripting.executeScript({
-                target: { tabId: tab.id },
-                func: (enabledNow) => {
-                    window.postMessage({
-                        type: "TIME_EXTENSION_TOGGLE",
-                        enabled: enabledNow
-                    }, "*");
-                },
-                args: [enabled] // pass the enabled var into the injecyed function as a param
+            // send timezone offset dictionary
+            await chrome.tabs.sendMessage(tab.id, {
+                type: "TIME_EXTENSION_SET_OFFSETS",
+                offsets: timezoneOffsets
+            });
+
+            // send extension toggle
+            await chrome.tabs.sendMessage(tab.id, {
+                type: "TIME_EXTENSION_TOGGLE",
+                enabled
             });
 
             console.log(`Page toggle sent: ${enabled ? "ON" : "OFF"}`);

@@ -12,6 +12,7 @@ export const DOM = {
 
     extensionToggle: document.getElementById("extensionToggle"),
     toggleStatusText: document.getElementById("toggleStatusText"),
+    toggleErrorText: document.getElementById("toggleErrorText"),
 
     inputTimeConvert: document.getElementById("convertTimeInput"),
 

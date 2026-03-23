@@ -97,7 +97,7 @@ export const timezoneOffsets = {
   "EGST": 0, // Eastern Greenland Summer Time
   "FET": 3, // Further-eastern European Time
   "GET": 4, // Georgia Standard Time
-  "IST": 1, // Irish Standard Time
+  "IST-IRISH": 1, // Irish Standard Time
   "MSK": 3, // Moscow Time
   "MSD": 4, // Moscow Daylight Time
   "SAST": 2, // South Africa Standard Time
