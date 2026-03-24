@@ -15,9 +15,9 @@
     let scanTimer = null;
 
     /**
-     * prevents the striong from being interpreted as a RegEx by itself
+     * prevents the string from being interpreted as a regex by itself
      * @param {string} str a string of text
-     * @returns {string} a safe string that can be parsed into RegEx
+     * @returns {string} a safe string that can be parsed into a regex
      */
     function escapeRegex(str) {
         return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -57,7 +57,7 @@
 
     /**
      * builds a regex that matches all formats of time to be highlighted and detected by the extension
-     * @returns 
+     * @returns {RegExp | null}
      */
     function buildMatchRegex() {
         if (!timezoneOffsets) return null;
@@ -93,7 +93,7 @@
         if (!node.nodeValue || !node.nodeValue.trim()) return true; // skip empty text nodes
 
         const parent = node.parentElement;
-        if (!parent) return true; // no parent = not normal html, detatached from DOM
+        if (!parent) return true; // no parent = not normal html, detached from the DOM
 
         // skip elements that are editable
         if (parent.closest(SKIP_SELECTOR)) return true;
@@ -169,8 +169,8 @@
 
     /**
      * normalizes supported AM/PM inputs such as AM, PM, a.m., and p.m.
-     * @param {string | undefined} ampm
-     * @returns {string | undefined}
+     * @param {string | undefined} ampm a string ampm field
+     * @returns {string | undefined} a normalized ampm field
      */
     function normalizeAMPM(ampm) {
         if (typeof ampm !== "string") return undefined;
@@ -248,7 +248,7 @@
      * wraps the match with a marker and a highlight style, and appends a badge showing
      * the converted time
      * @param {string} matchText the whole matched string of text
-     * @param {string} convertedTime the convertedlocal  time of the matched text
+     * @param {string} convertedTime the converted local time of the matched text
      * @returns {HTMLSpanElement} the wrapper element containing the original text and badge
      */
     function wrapMatch(matchText, convertedTime) {
@@ -268,20 +268,20 @@
     }
 
     /**
-     * replaces the matched nodes with the wrapMatch 
+     * replaces the matched text node with text fragments and wrapped matches
      * @param {Node} node original text node in the DOM
      * @param {Array} matches detected matches in the text node
      */
     function replaceNodeWithMatches(node, matches) {
         const text = node.nodeValue || "";
         const fragment = document.createDocumentFragment(); // temp DOM container
-        let cursor = 0; // tracker for orig text strigng
+        let cursor = 0; // tracker for original text string
 
         for (const match of matches) {
             if (match.start < cursor) continue; // skip if already handled
             if (!match.convertedTime) continue;
 
-            // if not handled then preserve if so
+            // preserve the plain text before this match, if any
             if (match.start > cursor) {
                 fragment.append(document.createTextNode(text.slice(cursor, match.start)));
             }
@@ -290,7 +290,7 @@
             cursor = match.end; // move cursor to match end
         }
 
-        // check for left overs after match
+        // check for leftovers after the last match
         if (cursor < text.length) {
             fragment.append(document.createTextNode(text.slice(cursor)));
         }
@@ -302,7 +302,7 @@
     /**
      * creates a tree walker to navigate the DOM for eligible nodes to be scanned
      * @param {Node} root root node for the subtree
-     * @returns {TreeWalker} a filtered TreeWalker by shouldSkipTextNode
+     * @returns {TreeWalker} a TreeWalker filtered by shouldSkipTextNode
      */
     function createWalker(root) {
         return document.createTreeWalker(
@@ -321,14 +321,14 @@
     /**
      * collects all nodes from the root DOM
      * @param {Node} root the root node of the DOM
-     * @returns {Array} collected nodes from root node
+     * @returns {Array} collected text nodes from the root node
      */
     function collectNodes(root) {
         const nodes = [];
 
         if (!root) return nodes;
 
-        // if root is text by itself, (needed becasue of mutation observer)
+        // if root is text by itself, needed because of mutation observer rescans
         if (root.nodeType === Node.TEXT_NODE) {
             if (!shouldSkipTextNode(root)) {
                 nodes.push(root);
@@ -341,7 +341,7 @@
             return nodes;
         }
 
-        // if inside a supposed skip node
+        // if already inside a skipped subtree
         if (root instanceof Element && root.closest(SKIP_SELECTOR)) return nodes;
         if (root instanceof Element && root.closest("[data-tz-processed='true']")) return nodes;
 
@@ -358,8 +358,8 @@
 
     /**
      * deduplicates detected matches and requests converted times from the background script
-     * @param {Map<TextNode, Match[]>} matchMap a map of matched formats for scanning
-     * @returns {Map<string, string>} a map of converted times as value and their non-converted counterparts as keys
+     * @param {Map<Node, Array>} matchMap a map of matched formats for scanning
+     * @returns {Promise<Map<string, string>>} a map of converted times as values and match keys as keys
      */
     async function requestConversions(matchMap) {
         const uniqueItems = [];
@@ -368,7 +368,7 @@
         // node -> arr of matches -> per match
         for (const matches of matchMap.values()) {
             for (const match of matches) {
-                if (seenKeys.has(match.key)) continue; // deduplicates existing conversions (e.g. 10:30 PST 10 times = one stored 10:30 PST) store in an array
+                if (seenKeys.has(match.key)) continue; // deduplicates existing conversions (e.g. 10:30 PST 10 times = one stored 10:30 PST)
                 seenKeys.add(match.key);
                 uniqueItems.push({
                     key: match.key,
@@ -405,8 +405,8 @@
     }
 
     /**
-     * scans a page and replaces all matched time zones with attatched badges that are converted to the local time zone of the user
-     * and adds a MutationObserver object to the DOM
+     * scans a page and replaces matched time zones with attached badges converted to the user's local time zone
+     * and adds a MutationObserver to the DOM
      * @param {Node} root root node of the page
      * @returns {void}
      */
@@ -540,14 +540,32 @@
     }
 
     /**
-     * listen for variable injections in tabs
+     * Pipeline Summary:
+     * 1. Load content script.
+     * 2. Receive timezone dictionary.
+     * 3. Build regex from timezone keys.
+     * 4. Receive enabled state.
+     * 5. Start scan.
+     * 6. Traverse DOM with TreeWalker.
+     * 7. Collect eligible text nodes only.
+     * 9. Extract named groups from each regex hit.
+     * 10. Filter false positives.
+     * 11. Validate timezone and time structure.
+     * 12. Group matches by original text node.
+     * 15. Merge converted results back into matches.
+     * 16. Replace original text nodes with fragments containing highlighted spans.
+     * 17. Observe DOM mutations and rescan new content.
+     * 18. Restore original text when disabled.
      */
+    // listens for messages from background.js to
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (!message || typeof message !== "object" || typeof message.type !== "string") {
             return;
         }
 
         switch (message.type) {
+            // setup and build the time zone offset dictionary and scan again if it was already scanned previously
+            // happens when syncing/updating a page
             case "TIME_EXTENSION_SET_OFFSETS":
                 if (!message.offsets || typeof message.offsets !== "object") {
                     sendResponse?.({ success: false });
@@ -564,7 +582,9 @@
 
                 sendResponse?.({ success: true });
                 return true;
-
+            
+            // setup the scanning process and highlight if enables and vice versa
+            // turns scanning/highlighting on or off
             case "TIME_EXTENSION_TOGGLE":
                 if (typeof message.enabled !== "boolean") {
                     sendResponse?.({ success: false });

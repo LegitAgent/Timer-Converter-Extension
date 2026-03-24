@@ -115,8 +115,8 @@ function isValid(map) {
 }
 
 /**
- * checks for which error occured.
- * @param {*} idx the index error message
+ * checks which error occurred.
+ * @param {Number} idx the index error message
  */
 function errorMessage(idx) {
     if (idx == 1) {
@@ -162,11 +162,11 @@ export async function convertPastedTime() {
         if (validStandard[0]) {
             validMap = isStandard;
             const convertedTime = convertToLocal(validMap, timezone_now);
-            DOM.copyPasteOutput.innerHTML = `${convertedTime}`;
+            DOM.copyPasteOutput.textContent = convertedTime;
         } else if (validReverse[0]) {
             validMap = isReverse;
             const convertedTime = convertToLocal(validMap, timezone_now);
-            DOM.copyPasteOutput.innerHTML = `${convertedTime}`;
+            DOM.copyPasteOutput.textContent = convertedTime;
         } else {
             const moreLikely = validStandard[1] > validReverse[1] ? validStandard[1] : validReverse[1];
             errorMessage(moreLikely);

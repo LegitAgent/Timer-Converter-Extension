@@ -17,17 +17,6 @@ export function applyTimezoneUI(timezone) {
 }
 
 /**
- * checks if the element has any text or value in it, if it doesn;t, then hide it.
- * @param {Element} el element to render
- * @param {string} text text to check
- */
-export function renderOutput(el, text) {
-    el.textContent = text || "";
-    el.classList.toggle("hidden", !text || !text.trim());
-}
-
-
-/**
  * updates the copy paste text area to have the trash icon.
  * @returns {void} nothing if the wrapper is null
  */
@@ -130,8 +119,8 @@ export function convertTime() {
         const ampm = h24 >= 12 ? "PM" : "AM";
         const h12 = (h24 % 12) || 12; // if 0, result is 12
 
-        let UTCDisplacementSource = sourceData.gmtOffset / 3600;
-        let UTCDisplacementTarget = targetData.gmtOffset / 3600;
+        let UTCDisplacementSource = sourceOffset / 3600;
+        let UTCDisplacementTarget = targetOffset / 3600;
 
         if(UTCDisplacementSource >= 0) {
             UTCDisplacementSource = "+" + UTCDisplacementSource;
@@ -226,11 +215,11 @@ export function setupExtensionToggle() {
                 tab.url.startsWith("https://chromewebstore.google.com/") ||
                 tab.url.startsWith("https://chrome.google.com/webstore/")
             ) {
-                console.log("Cannot inject into this tab.");
+                console.log("Cannot sync this tab.");
                 return;
             }
 
-            // the content script is declared in manifest.json and loaded by Chrome
+            // the content script is declared in manifest.json and loaded by Chrome.
             await chrome.tabs.sendMessage(tab.id, {
                 type: "TIME_EXTENSION_SET_OFFSETS",
                 offsets: timezoneOffsets

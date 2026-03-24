@@ -18,9 +18,9 @@ export function getLocation() {
 
 /**
  * gets the current time zone provided a latitude and longitude.
- * @param {*} latitude latitude of location
- * @param {*} longitude longitude of location
- * @returns location dictionary using timezonedb
+ * @param {Float} latitude latitude of location
+ * @param {Float} longitude longitude of location
+ * @returns location dictionary returned by the timezone API
  */
 export function fetchTimezone(latitude, longitude) {
     return new Promise((resolve, reject) => {
@@ -43,8 +43,8 @@ export function fetchTimezone(latitude, longitude) {
 }
 
 /**
- * gets the list of time zones from timezonedb
- * @returns the list of available time zones in timezonedb
+ * gets the list of time zones from the timezone API
+ * @returns the list of available time zones from the timezone API
  */
 export function fetchTimezoneList() {
     return new Promise((resolve, reject) => {

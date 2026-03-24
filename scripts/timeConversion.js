@@ -140,7 +140,7 @@ function isAustraliaDST(date) {
 /**
  * checks to see if the given time zone has daylight savings
  * @param {string} tz a time zone abbreviation (e.g. PST, CEST, CET, etc.)
- * @returns {Boolean} if the time zome given has daylight savings
+ * @returns {Boolean} if the time zone given has daylight savings
  */
 function checkDaylightSavings(tz) {
     const zone = String(tz).toUpperCase().trim();

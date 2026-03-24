@@ -3,8 +3,8 @@ import { storageLocal } from "./storage.js";
 import { updateCopyPasteClearButton } from "./ui.js"
 
 /**
- * saves the current state of the popup, and stores it to google local storage
- * @returns 
+ * saves the current state of the popup and stores it in chrome local storage
+ * @returns {Promise<void>}
  */
 export async function savePopupState() {
     try {
@@ -21,8 +21,8 @@ export async function savePopupState() {
                 cachedTargetZoneInput: DOM.targetZoneInput.value,
                 cachedTargetZoneValue: DOM.targetZoneValue.value,
                 cachedInputTimeConvert: DOM.inputTimeConvert.value,
-                cachedConvertOutput: DOM.convertOutput.innerHTML,
-                cachedCopyPasteOutput: DOM.copyPasteOutput.innerHTML,
+                cachedConvertOutput: DOM.convertOutput.textContent,
+                cachedCopyPasteOutput: DOM.copyPasteOutput.textContent,
                 extensionEnabled: DOM.extensionToggle?.checked ?? false,
             }
         });
@@ -33,8 +33,8 @@ export async function savePopupState() {
 }
 
 /**
- * accesses google local storage, and retrieves all stored states of the popup
- * @returns 
+ * restores the saved popup state from chrome local storage
+ * @returns {Promise<void>}
  */
 export async function restoreState() {
     try {
@@ -77,12 +77,12 @@ export async function restoreState() {
         }
 
         if (popupState.cachedConvertOutput != null) {
-            DOM.convertOutput.innerHTML = popupState.cachedConvertOutput;
+            DOM.convertOutput.textContent = popupState.cachedConvertOutput;
         }
         updateCopyPasteClearButton();
 
         if (popupState.cachedCopyPasteOutput != null) {
-            DOM.copyPasteOutput.innerHTML = popupState.cachedCopyPasteOutput;
+            DOM.copyPasteOutput.textContent = popupState.cachedCopyPasteOutput;
         }
 
         if (popupState.tab != null) {

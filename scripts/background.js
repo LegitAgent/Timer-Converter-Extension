@@ -1,11 +1,10 @@
 import { storageLocal } from "./storage.js";
 import { timezoneOffsets } from "./timezoneOffsets.js";
 import { convertToLocal } from "./timeConversion.js";
-// maintaining toggle code here...
 /**
- * filters through links that are banned for injecting scripts into
- * @param {string} url a url string input
- * @returns 
+ * filters out URLs where the extension should not sync page state
+ * @param {string} url a URL string input
+ * @returns {boolean}
  */
 function canInjectIntoUrl(url) {
     return Boolean(
@@ -23,8 +22,8 @@ function canInjectIntoUrl(url) {
  * send a message to a tab if the manifest content script is present.
  * Tabs that were already open before the extension reloaded will not have
  * the receiver until they navigate or refresh.
- * @param {number} tabId
- * @param {object} message
+ * @param {Number} tabId
+ * @param {Object} message
  * @returns {Promise<boolean>}
  */
 async function sendTabMessageIfReady(tabId, message) {
@@ -42,7 +41,7 @@ async function sendTabMessageIfReady(tabId, message) {
 
 /**
  * send current extension state to a tab
- * @param {number} tabId
+ * @param {Number} tabId
  */
 async function syncTabState(tabId) {
     const tab = await chrome.tabs.get(tabId);
@@ -76,7 +75,7 @@ async function syncTabState(tabId) {
 async function syncAllTabsState() {
     const tabs = await chrome.tabs.query({});
 
-    // syncs all tabs to the current active tab state (i.e., toggle for injection)
+    // sync all eligible tabs to the current toggle/timezone state
     await Promise.all(
         tabs
             .filter((tab) => tab.id && canInjectIntoUrl(tab.url))
@@ -89,9 +88,11 @@ async function syncAllTabsState() {
 }
 
 /**
- * listener for chrome.sendMessage. Triggers when sending messages via chrome.runtime.sendmessage. Gets API requests from api.js
+ * listens for messages from popup/content scripts and handles conversion/API requests
  */
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    
+    // content script conversion
     if (msg.action === "convertDetectedTimes") {
         storageLocal.get("timezone_now")
             .then(({ timezone_now }) => {
@@ -139,6 +140,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return true;
     }
 
+    // API sending and receiving
+
     let url = '';
     if (msg.action === "getTimezone") {
         const { latitude, longitude } = msg;
@@ -170,7 +173,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
  */
 chrome.tabs.onActivated.addListener(async ({ tabId }) => {
     try {
-        // inject script and send ON/OFF state
         await syncTabState(tabId);
     } catch (error) {
         console.error("Failed to sync activated tab:", error);
@@ -191,15 +193,24 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 
 /**
- * Triggers when there are changes with the toggle button, which is stored in storage.local
+ * sync open tabs when the toggle state or detected local timezone changes
  */
 chrome.storage.onChanged.addListener(async (changes, areaName) => {
-    if (areaName !== "local" || !changes.popupState) return;
+    if (areaName !== "local") return;
 
-    const previousEnabled = changes.popupState.oldValue?.extensionEnabled;
-    const currentEnabled = changes.popupState.newValue?.extensionEnabled;
+    const popupStateChanged = Boolean(changes.popupState);
+    const timezoneChanged = Boolean(changes.timezone_now);
 
-    if (previousEnabled === currentEnabled) return;
+    if (!popupStateChanged && !timezoneChanged) return;
+
+    if (popupStateChanged) {
+        const previousEnabled = changes.popupState.oldValue?.extensionEnabled;
+        const currentEnabled = changes.popupState.newValue?.extensionEnabled;
+
+        if (previousEnabled === currentEnabled && !timezoneChanged) {
+            return;
+        }
+    }
 
     try {
         await syncAllTabsState();

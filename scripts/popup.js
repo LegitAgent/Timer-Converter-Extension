@@ -41,7 +41,7 @@ async function handleLocationRequest() {
 }
 
 /**
- * gets the list of time zones from timezonedb and initializes them as a list
+ * gets the list of time zones from the API and initializes them as a list
  */
 async function handleTimezoneListRequest() {
     try {

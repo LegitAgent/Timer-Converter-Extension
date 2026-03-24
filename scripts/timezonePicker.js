@@ -116,10 +116,13 @@ export function setupTimezonePicker(inputEl, hiddenEl, listEl, timezones) {
      * @returns nothing if there are no time zones to show
      */
     function renderList(items) {
-        listEl.innerHTML = ""; // clear
+        listEl.replaceChildren(); // clear
 
         if (items.length === 0) {
-            listEl.innerHTML = `<div class="timezoneEmpty">No matching timezones</div>`;
+            const empty = document.createElement("div");
+            empty.className = "timezoneEmpty";
+            empty.textContent = "No matching timezones";
+            listEl.appendChild(empty);
             listEl.classList.add("show");
             return;
         }
@@ -134,10 +137,13 @@ export function setupTimezonePicker(inputEl, hiddenEl, listEl, timezones) {
                 const lower = tz.toLowerCase();
                 const idx = lower.indexOf(query.toLowerCase());
                 if (idx !== -1) {
-                    option.innerHTML =
-                        tz.slice(0, idx) +
-                        `<mark>${tz.slice(idx, idx + query.length)}</mark>` +
-                        tz.slice(idx + query.length);
+                    const before = tz.slice(0, idx);
+                    const match = tz.slice(idx, idx + query.length);
+                    const after = tz.slice(idx + query.length);
+                    const mark = document.createElement("mark");
+
+                    mark.textContent = match;
+                    option.append(before, mark, after);
                 } else {
                     option.textContent = tz;
                 }
