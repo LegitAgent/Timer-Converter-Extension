@@ -1,24 +1,40 @@
 import { timezoneOffsets } from "./timezoneOffsets.js";
 
 /**
+ * normalizes supported AM/PM inputs such as AM, PM, a.m., and p.m.
+ * @param {string | undefined} ampm
+ * @returns {string | undefined}
+ */
+export function normalizeAMPM(ampm) {
+    if (typeof ampm !== "string") return undefined;
+
+    const normalized = ampm.trim().replace(/\./g, "").toUpperCase();
+    if (normalized === "AM" || normalized === "PM") {
+        return normalized;
+    }
+
+    return ampm?.toUpperCase();
+}
+
+/**
  * processes a time string by checking for an "inline" format (e.g., "6:00PM" or "1230 AM").
  * @param {string} time time input
  * @param {string} ampm AM/PM user input or AM/PM section (undefined for military time)
  * @returns {{time: string, ampm: (string|undefined)}}
  */
 export function extractTimeParts(time, ampm) {
-    const inline = time.match(/^(\d{1,2}(?::\d{2})?|\d{3,4})(AM|PM)$/i);
+    const inline = time.match(/^(\d{1,2}(?::\d{2})?|\d{3,4})(A\.?M\.?|P\.?M\.?)$/i);
 
     if (inline && ampm === undefined) {
         return {
             time: inline[1],
-            ampm: inline[2].toUpperCase()
+            ampm: normalizeAMPM(inline[2])
         };
     }
 
     return {
         time,
-        ampm: ampm?.toUpperCase()
+        ampm: normalizeAMPM(ampm)
     };
 }
 
@@ -61,7 +77,7 @@ export function getHoursAndMinutes(time, ampm) {
     if (minutes < 0 || minutes >= 60) return false;
 
     if (ampm) {
-        const upperAMPM = ampm.toUpperCase();
+        const upperAMPM = normalizeAMPM(ampm);
 
         if (hours < 1 || hours > 12) return false;
 
@@ -69,6 +85,8 @@ export function getHoursAndMinutes(time, ampm) {
             if (hours === 12) hours = 0;
         } else if (upperAMPM === "PM") {
             if (hours !== 12) hours += 12;
+        } else {
+            return false;
         }
     } else {
         if (hours < 0 || hours > 23) return false;

@@ -6,7 +6,7 @@
     const STYLE_ID = "time-extension-inline-style";
     const SKIP_SELECTOR = "input, textarea, script, style, [contenteditable='true']";
     const TIME_PATTERN = String.raw`(?:\d{1,2}:\d{2}|\d{3,4}|\d{1,2})`;
-    const AMPM_PATTERN = String.raw`(?:AM|PM)`;
+    const AMPM_PATTERN = String.raw`(?:A\.?M\.?|P\.?M\.?)`;
 
     let timezoneOffsets = null;
     let matchRegex = null;
@@ -149,7 +149,7 @@
         if (minutes < 0 || minutes >= 60) return false;
 
         if (ampm) {
-            const upperAMPM = ampm.toUpperCase();
+            const upperAMPM = normalizeAMPM(ampm);
 
             if (hours < 1 || hours > 12) return false;
 
@@ -168,24 +168,66 @@
     }
 
     /**
-     * find specific texts that 
-     * @param {*} text 
-     * @returns 
+     * normalizes supported AM/PM inputs such as AM, PM, a.m., and p.m.
+     * @param {string | undefined} ampm
+     * @returns {string | undefined}
+     */
+    function normalizeAMPM(ampm) {
+        if (typeof ampm !== "string") return undefined;
+
+        const normalized = ampm.trim().replace(/\./g, "").toUpperCase();
+        if (normalized === "AM" || normalized === "PM") {
+            return normalized;
+        }
+
+        return ampm.toUpperCase();
+    }
+
+    /**
+     * reject match patterns that are technically parseable but very likely to be
+     * ordinary prose or year values rather than real timezone mentions.
+     * @param {string} time
+     * @param {string | undefined} ampm
+     * @param {string} rawTimezone
+     * @returns {boolean}
+     */
+    function isLikelyFalsePositive(time, ampm, rawTimezone) {
+        if (/^\d{4}$/.test(time) && !ampm && /^(19|20)\d{2}$/.test(time)) {
+            return true;
+        }
+
+        if (rawTimezone.length <= 2 && rawTimezone !== rawTimezone.toUpperCase()) {
+            return true;
+        }
+
+        if (rawTimezone.toUpperCase() === "WT" && rawTimezone !== rawTimezone.toUpperCase()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * find specific groups of strings in a block of text that match standard formatting (i.e. 10:30pm pst, 14:20 cest, etc.)
+     * @param {string} text a block of text from a node
+     * @returns {Object} key-value pairs of valid time matches
      */
     function findTimeMatches(text) {
         if (!text || !matchRegex) return [];
 
         const matches = [];
-        matchRegex.lastIndex = 0;
+        matchRegex.lastIndex = 0; // char pos where next search begins
 
         let match;
         while ((match = matchRegex.exec(text)) !== null) {
             const matchText = match.groups?.full || match[0];
             const time = match.groups?.time || "";
-            const ampm = (match.groups?.ampm || "").toUpperCase();
-            const timezone = (match.groups?.tz || "").toUpperCase();
+            const ampm = normalizeAMPM(match.groups?.ampm || "");
+            const rawTimezone = match.groups?.tz || "";
+            const timezone = rawTimezone.toUpperCase();
 
             if (!timezone || !time) continue;
+            if (isLikelyFalsePositive(time, ampm || undefined, rawTimezone)) continue;
             if (!(timezone in timezoneOffsets)) continue;
             if (!getHoursAndMinutes(time, ampm || undefined)) continue;
 

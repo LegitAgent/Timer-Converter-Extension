@@ -20,23 +20,24 @@ function canInjectIntoUrl(url) {
 }
 
 /**
- * inject timezoneDetectScript.js into a tab if it is a normal web page
+ * send a message to a tab if the manifest content script is present.
+ * Tabs that were already open before the extension reloaded will not have
+ * the receiver until they navigate or refresh.
  * @param {number} tabId
+ * @param {object} message
+ * @returns {Promise<boolean>}
  */
-async function injectScript(tabId) {
-    const tab = await chrome.tabs.get(tabId);
+async function sendTabMessageIfReady(tabId, message) {
+    try {
+        await chrome.tabs.sendMessage(tabId, message);
+        return true;
+    } catch (error) {
+        if (error?.message?.includes("Receiving end does not exist")) {
+            return false;
+        }
 
-    if (!canInjectIntoUrl(tab?.url)) {
-        console.log("Blocked URL, not injecting.");
-        return false;
+        throw error;
     }
-
-    // inject script into tab id
-    await chrome.scripting.executeScript({
-        target: { tabId },
-        files: ["scripts/timezoneDetectScript.js"]
-    });
-    return true;
 }
 
 /**
@@ -44,18 +45,26 @@ async function injectScript(tabId) {
  * @param {number} tabId
  */
 async function syncTabState(tabId) {
+    const tab = await chrome.tabs.get(tabId);
+
+    if (!canInjectIntoUrl(tab?.url)) {
+        console.log("Blocked URL, not syncing.");
+        return;
+    }
+
     const { popupState } = await storageLocal.get("popupState");
     const enabled = Boolean(popupState?.extensionEnabled);
 
-    const success = await injectScript(tabId);
-    if (!success) return;
-
-    await chrome.tabs.sendMessage(tabId, {
+    const offsetsSent = await sendTabMessageIfReady(tabId, {
         type: "TIME_EXTENSION_SET_OFFSETS",
         offsets: timezoneOffsets
     });
 
-    await chrome.tabs.sendMessage(tabId, {
+    if (!offsetsSent) {
+        return;
+    }
+
+    await sendTabMessageIfReady(tabId, {
         type: "TIME_EXTENSION_TOGGLE",
         enabled
     });

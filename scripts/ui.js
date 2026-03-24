@@ -230,13 +230,7 @@ export function setupExtensionToggle() {
                 return;
             }
 
-            // inject the controller script
-            await chrome.scripting.executeScript({
-                target: { tabId: tab.id },
-                files: ["scripts/timezoneDetectScript.js"]
-            });
-
-            // send timezone offset dictionary
+            // the content script is declared in manifest.json and loaded by Chrome
             await chrome.tabs.sendMessage(tab.id, {
                 type: "TIME_EXTENSION_SET_OFFSETS",
                 offsets: timezoneOffsets
@@ -250,7 +244,12 @@ export function setupExtensionToggle() {
 
             console.log(`Page toggle sent: ${enabled ? "ON" : "OFF"}`);
         } catch (error) {
-            console.error("Immediate popup injection failed:", error);
+            if (error?.message?.includes("Receiving end does not exist")) {
+                console.log("Content script is not loaded in this tab yet. Reload the page and try again.");
+                return;
+            }
+
+            console.error("Immediate popup sync failed:", error);
         }
     });
 }

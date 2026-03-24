@@ -13,7 +13,7 @@ export function sanitizeTimeInput(input) {
     if (typeof input !== "string") return "";
 
     // this automatically blocks < > " ' ` and all control characters.
-    let clean = input.replace(/[^a-zA-Z0-9\s:/+_\-]/g, "");
+    let clean = input.replace(/[^a-zA-Z0-9\s:./+_\-]/g, "");
 
     // limit length (Time strings are rarely over 50 chars)
     clean = clean.trim().slice(0, 100);

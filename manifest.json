@@ -16,9 +16,7 @@
     "permissions": [
         "geolocation",
         "storage",
-        "windows",
-        "activeTab",
-        "scripting"
+        "windows"
     ],
     "background": {
         "service_worker": "scripts/background.js",
@@ -27,6 +25,21 @@
     "host_permissions": [
         "https://timezone-proxy.albamartindarius.workers.dev/*",
         "<all_urls>"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "exclude_matches": [
+                "https://chromewebstore.google.com/*",
+                "https://chrome.google.com/webstore/*"
+            ],
+            "js": [
+                "scripts/timezoneDetectScript.js"
+            ],
+            "run_at": "document_idle"
+        }
     ],
     "commands": {
         "_execute_action": {
