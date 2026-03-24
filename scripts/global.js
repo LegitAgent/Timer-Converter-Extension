@@ -1,1 +1,0 @@
-export const MESSAGE_SOURCE = "time-converter-extension";

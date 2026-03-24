@@ -186,21 +186,19 @@
     /**
      * reject match patterns that are technically parseable but very likely to be
      * ordinary prose or year values rather than real timezone mentions.
-     * @param {string} time
-     * @param {string | undefined} ampm
-     * @param {string} rawTimezone
-     * @returns {boolean}
+     * @param {string} time a string time
+     * @param {string | undefined} ampm a string ampm field
+     * @param {string} rawTimezone a string raw time zone input
+     * @returns {boolean} if it is a false positive
      */
     function isLikelyFalsePositive(time, ampm, rawTimezone) {
+        // if token is exactly 4 digits, there is no ampm, and looks like a year from 1900-2099
         if (/^\d{4}$/.test(time) && !ampm && /^(19|20)\d{2}$/.test(time)) {
             return true;
         }
 
+        // for AT != at (e.g., Atlantic Time != "at")
         if (rawTimezone.length <= 2 && rawTimezone !== rawTimezone.toUpperCase()) {
-            return true;
-        }
-
-        if (rawTimezone.toUpperCase() === "WT" && rawTimezone !== rawTimezone.toUpperCase()) {
             return true;
         }
 
@@ -210,7 +208,7 @@
     /**
      * find specific groups of strings in a block of text that match standard formatting (i.e. 10:30pm pst, 14:20 cest, etc.)
      * @param {string} text a block of text from a node
-     * @returns {Object} key-value pairs of valid time matches
+     * @returns {Array} array of key-value pairs of valid time matches
      */
     function findTimeMatches(text) {
         if (!text || !matchRegex) return [];
@@ -226,6 +224,7 @@
             const rawTimezone = match.groups?.tz || "";
             const timezone = rawTimezone.toUpperCase();
 
+            // filters
             if (!timezone || !time) continue;
             if (isLikelyFalsePositive(time, ampm || undefined, rawTimezone)) continue;
             if (!(timezone in timezoneOffsets)) continue;
@@ -245,11 +244,18 @@
         return matches;
     }
 
+    /**
+     * wraps the match with a marker and a highlight style, and appends a badge showing
+     * the converted time
+     * @param {string} matchText the whole matched string of text
+     * @param {string} convertedTime the convertedlocal  time of the matched text
+     * @returns {HTMLSpanElement} the wrapper element containing the original text and badge
+     */
     function wrapMatch(matchText, convertedTime) {
         const wrapper = document.createElement("span");
         wrapper.className = "tz-highlight";
-        wrapper.setAttribute("data-tz-processed", "true");
-        wrapper.setAttribute("data-original-text", matchText);
+        wrapper.setAttribute("data-tz-processed", "true"); // marker
+        wrapper.setAttribute("data-original-text", matchText); // orig text to store for undoing
 
         wrapper.append(document.createTextNode(matchText));
 
@@ -261,34 +267,47 @@
         return wrapper;
     }
 
+    /**
+     * replaces the matched nodes with the wrapMatch 
+     * @param {Node} node original text node in the DOM
+     * @param {Array} matches detected matches in the text node
+     */
     function replaceNodeWithMatches(node, matches) {
         const text = node.nodeValue || "";
-        const fragment = document.createDocumentFragment();
-        let cursor = 0;
+        const fragment = document.createDocumentFragment(); // temp DOM container
+        let cursor = 0; // tracker for orig text strigng
 
         for (const match of matches) {
-            if (match.start < cursor) continue;
+            if (match.start < cursor) continue; // skip if already handled
             if (!match.convertedTime) continue;
 
+            // if not handled then preserve if so
             if (match.start > cursor) {
                 fragment.append(document.createTextNode(text.slice(cursor, match.start)));
             }
 
             fragment.append(wrapMatch(match.matchText, match.convertedTime));
-            cursor = match.end;
+            cursor = match.end; // move cursor to match end
         }
 
+        // check for left overs after match
         if (cursor < text.length) {
             fragment.append(document.createTextNode(text.slice(cursor)));
         }
-
+        
+        // replace node with fragment we built
         node.parentNode?.replaceChild(fragment, node);
     }
 
+    /**
+     * creates a tree walker to navigate the DOM for eligible nodes to be scanned
+     * @param {Node} root root node for the subtree
+     * @returns {TreeWalker} a filtered TreeWalker by shouldSkipTextNode
+     */
     function createWalker(root) {
         return document.createTreeWalker(
             root,
-            NodeFilter.SHOW_TEXT,
+            NodeFilter.SHOW_TEXT, // nodes that have text
             {
                 acceptNode(node) {
                     return shouldSkipTextNode(node)
@@ -299,11 +318,17 @@
         );
     }
 
+    /**
+     * collects all nodes from the root DOM
+     * @param {Node} root the root node of the DOM
+     * @returns {Array} collected nodes from root node
+     */
     function collectNodes(root) {
         const nodes = [];
 
         if (!root) return nodes;
 
+        // if root is text by itself, (needed becasue of mutation observer)
         if (root.nodeType === Node.TEXT_NODE) {
             if (!shouldSkipTextNode(root)) {
                 nodes.push(root);
@@ -311,16 +336,19 @@
             return nodes;
         }
 
+        // only supported node types
         if (!(root instanceof Element) && !(root instanceof Document) && !(root instanceof DocumentFragment)) {
             return nodes;
         }
 
+        // if inside a supposed skip node
         if (root instanceof Element && root.closest(SKIP_SELECTOR)) return nodes;
         if (root instanceof Element && root.closest("[data-tz-processed='true']")) return nodes;
 
         const walker = createWalker(root);
         let current;
 
+        // traverse nodes in the DOM
         while ((current = walker.nextNode())) {
             nodes.push(current);
         }
@@ -328,13 +356,19 @@
         return nodes;
     }
 
+    /**
+     * deduplicates detected matches and requests converted times from the background script
+     * @param {Map<TextNode, Match[]>} matchMap a map of matched formats for scanning
+     * @returns {Map<string, string>} a map of converted times as value and their non-converted counterparts as keys
+     */
     async function requestConversions(matchMap) {
         const uniqueItems = [];
         const seenKeys = new Set();
 
+        // node -> arr of matches -> per match
         for (const matches of matchMap.values()) {
             for (const match of matches) {
-                if (seenKeys.has(match.key)) continue;
+                if (seenKeys.has(match.key)) continue; // deduplicates existing conversions (e.g. 10:30 PST 10 times = one stored 10:30 PST) store in an array
                 seenKeys.add(match.key);
                 uniqueItems.push({
                     key: match.key,
@@ -358,6 +392,7 @@
                 return results;
             }
 
+            // parse conversions into a map
             response.results.forEach((item) => {
                 results.set(item.key, item.convertedTime);
             });
@@ -369,6 +404,12 @@
         }
     }
 
+    /**
+     * scans a page and replaces all matched time zones with attatched badges that are converted to the local time zone of the user
+     * and adds a MutationObserver object to the DOM
+     * @param {Node} root root node of the page
+     * @returns {void}
+     */
     async function scanPage(root = document.body) {
         if (!isEnabled || !document.body || !matchRegex) return;
 
@@ -377,6 +418,7 @@
         const nodes = collectNodes(root);
         if (!nodes.length) return;
 
+        // get all standard format matches in all collected text nodes
         const matchMap = new Map();
         for (const node of nodes) {
             const matches = findTimeMatches(node.nodeValue || "");
@@ -387,25 +429,32 @@
 
         if (!matchMap.size) return;
 
+        // convert the map of matches and store it via key-value pairs 
         const conversions = await requestConversions(matchMap);
         if (!conversions.size) return;
 
+        // get all eligible scanned time formats and add a badge that has the locally converted time
         for (const [node, matches] of matchMap.entries()) {
+            // enriched = old time zone + new local time badge
+            // add existing match attribs and add convertedTime attrib
             const enrichedMatches = matches
                 .map((match) => ({
                     ...match,
                     convertedTime: conversions.get(match.key) || null
                 }))
-                .filter((match) => match.convertedTime);
+                .filter((match) => match.convertedTime); // for only successful conversions
 
             if (enrichedMatches.length) {
-                replaceNodeWithMatches(node, enrichedMatches);
+                replaceNodeWithMatches(node, enrichedMatches); // add styling and replace node
             }
         }
 
-        initObserver();
+        initObserver(); // adds mutation observer
     }
 
+    /**
+     * clear all nodes that were scanned and appended to the DOM
+     */
     function clearProcessedNodes() {
         document.querySelectorAll(".tz-highlight[data-tz-processed='true']").forEach((node) => {
             const originalText = node.getAttribute("data-original-text") || "";
@@ -413,12 +462,22 @@
         });
     }
 
+    /**
+     * disconnects the mutation observer from the DOM
+     * @returns {void}
+     */
     function disconnectObserver() {
         if (!observer) return;
         observer.disconnect();
         observer = null;
     }
 
+    /**
+     * schedule a debounced page scan for a given root node
+     * used to rescan dynamically updated content without doing it on every update
+     * @param {Node} root the root to be scanned from the DOM
+     * @returns {void}
+     */
     function scheduleScan(root = document.body) {
         if (!isEnabled) return;
 
@@ -426,24 +485,32 @@
             clearTimeout(scanTimer);
         }
 
+        // sets a debounce timer to limit to reduce scans
         scanTimer = window.setTimeout(() => {
             scanTimer = null;
             void scanPage(root);
         }, 150);
     }
 
+    /**
+     * initializes the mutation observer
+     * @returns {void}
+     */
     function initObserver() {
         if (observer || !document.body) return;
 
         observer = new MutationObserver((mutations) => {
             if (!isEnabled) return;
 
+            // loop through every DOM change in the callback batch
             for (const mutation of mutations) {
+                // structural DOM change (new nodes added (e.g., <div>, <p>, element nodes))
                 if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
                     scheduleScan(mutation.target);
                     return;
                 }
 
+                // text node changes (e.g., 10am to 10pm), edits to text
                 if (mutation.type === "characterData") {
                     scheduleScan(mutation.target.parentNode || document.body);
                     return;
@@ -451,6 +518,7 @@
             }
         });
 
+        // watch list
         observer.observe(document.body, {
             childList: true,
             subtree: true,
@@ -458,6 +526,9 @@
         });
     }
 
+    /**
+     * clears and removes the highlight styles from the DOM and disconnects the mutation observer
+     */
     function clearHighlights() {
         if (scanTimer) {
             clearTimeout(scanTimer);
@@ -468,6 +539,9 @@
         clearProcessedNodes();
     }
 
+    /**
+     * listen for variable injections in tabs
+     */
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (!message || typeof message !== "object" || typeof message.type !== "string") {
             return;
@@ -506,20 +580,6 @@
                 }
 
                 void scanPage();
-                sendResponse?.({ success: true });
-                return true;
-
-            case "TIME_EXTENSION_SCAN_PAGE":
-                if (isEnabled) {
-                    clearProcessedNodes();
-                    void scanPage();
-                }
-
-                sendResponse?.({ success: true });
-                return true;
-
-            case "TIME_EXTENSION_CLEAR_HIGHLIGHTS":
-                clearHighlights();
                 sendResponse?.({ success: true });
                 return true;
 
