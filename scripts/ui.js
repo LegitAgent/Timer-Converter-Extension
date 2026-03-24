@@ -222,7 +222,9 @@ export function setupExtensionToggle() {
                 tab.url.startsWith("chrome://") ||
                 tab.url.startsWith("edge://") ||
                 tab.url.startsWith("about:") ||
-                tab.url.startsWith("chrome-extension://")
+                tab.url.startsWith("chrome-extension://") ||
+                tab.url.startsWith("https://chromewebstore.google.com/") ||
+                tab.url.startsWith("https://chrome.google.com/webstore/")
             ) {
                 console.log("Cannot inject into this tab.");
                 return;

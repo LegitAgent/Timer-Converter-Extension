@@ -117,6 +117,15 @@
                         we specify them accordingly as: <code>IST-ISRAEL</code>, <code>IST-IRISH</code> and <code>IST</code> respectively.</li>
                     </ul>
                 </div>
+                The same rule applies for the auto detection of time zones as well.
+                For example:
+                <div class="exampleBlock">
+                    <ul>
+                        <li>If <code>CST</code> is written, the auto detector will automatically assume that it is <b>Central Standard Time</b> 
+                        , meaning if the context of CST specifically implies that it isn't the default (e.g. it specifies that it is in China Standard Time), 
+                        then the time zone conversion will NOT be accurate.
+                    </ul>
+                </div>
                 <p class="sectionText">
                 Hence, below is a table for all ambiguous timezones and their corresponding codes for each:
                 </p>
