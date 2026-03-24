@@ -1,6 +1,6 @@
 // (() => means: make an anonymous function and execute it immediately.
 (() => {
-    if (window.__timeExtensionScannerLoaded) return;
+    if (window.__timeExtensionScannerLoaded) return; // check if this script has been loaded for this tab
     window.__timeExtensionScannerLoaded = true;
 
     const STYLE_ID = "time-extension-inline-style";
@@ -14,10 +14,19 @@
     let observer = null;
     let scanTimer = null;
 
+    /**
+     * prevents the striong from being interpreted as a RegEx by itself
+     * @param {string} str a string of text
+     * @returns {string} a safe string that can be parsed into RegEx
+     */
     function escapeRegex(str) {
         return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }
 
+    /**
+     * creates the style for elements that need highlighting
+     * @returns {void}
+     */
     function injectStyles() {
         if (document.getElementById(STYLE_ID)) return;
 
@@ -46,45 +55,67 @@
         document.documentElement.appendChild(style);
     }
 
+    /**
+     * builds a regex that matches all formats of time to be highlighted and detected by the extension
+     * @returns 
+     */
     function buildMatchRegex() {
         if (!timezoneOffsets) return null;
 
-        const timezoneKeys = Object.keys(timezoneOffsets)
+        const timezoneKeys = Object.keys(timezoneOffsets) // get only keys
             .map((key) => key.toUpperCase())
-            .filter((key) => key.length > 1)
-            .sort((a, b) => b.length - a.length)
-            .map(escapeRegex);
+            .filter((key) => key.length > 1) // filter keys with only signle letter, i.e. military times
+            .sort((a, b) => b.length - a.length) // sort by length
+            .map(escapeRegex); // treat as literals if the key has regex interpretable characters
 
-        if (!timezoneKeys.length) return null;
-
+        // match every single key into a pipe (e.g. PST | ET | CEST ...)
         const timezonePattern = `(?:${timezoneKeys.join("|")})`;
-
+        
+        // string.raw for raw text i.e. no \n
+        // format: match must not be immediately preceded by a letter, digit, or underscore
+        //         create capture group, named as <full>
+        //         name the group time and use TIME_PATTERN regex, similar with ampm and tz
+        //         match must not be immediately followed by a letter, digit, or underscore
+        // e.g., abcd10AMPSTabcd is invalid since it is stuck between a word, it must be a word in itself
         return new RegExp(
             String.raw`(?<![A-Za-z0-9_])(?<full>(?<time>${TIME_PATTERN})\s*(?<ampm>${AMPM_PATTERN})?\s*(?<tz>${timezonePattern}))(?![A-Za-z0-9_])`,
             "gi"
         );
     }
 
+    /**
+     * checks whether or not a specific node is supposed to be skipped by the scanner
+     * @param {Node} node a node element in the DOM
+     * @returns {Boolean} whether to skip the node or not
+     */
     function shouldSkipTextNode(node) {
-        if (!node || node.nodeType !== Node.TEXT_NODE) return true;
-        if (!node.nodeValue || !node.nodeValue.trim()) return true;
+        if (!node || node.nodeType !== Node.TEXT_NODE) return true; // skip non-text nodes
+        if (!node.nodeValue || !node.nodeValue.trim()) return true; // skip empty text nodes
 
         const parent = node.parentElement;
-        if (!parent) return true;
+        if (!parent) return true; // no parent = not normal html, detatached from DOM
 
+        // skip elements that are editable
         if (parent.closest(SKIP_SELECTOR)) return true;
-        if (parent.closest("[data-tz-processed='true']")) return true;
+        if (parent.closest("[data-tz-processed='true']")) return true; // skip already marked elements
 
         if (parent.isContentEditable || parent.closest("[contenteditable]:not([contenteditable='false'])")) {
             return true;
         }
 
+        // skip elements that are not visible
         const styles = window.getComputedStyle(parent);
         if (styles.display === "none" || styles.visibility === "hidden") return true;
 
         return false;
     }
 
+    /**
+     * checks to see if the time is valid and gets its corresponding hours and minutes if possible.
+     * @param {string} time a string for the time section
+     * @param {string} ampm a string for the ampm section
+     * @returns {(Object | Boolean)} an Object literal if valid, otherwise false
+     */
     function getHoursAndMinutes(time, ampm) {
         let hours = 0;
         let minutes = 0;
@@ -136,6 +167,11 @@
         return { hours, minutes };
     }
 
+    /**
+     * find specific texts that 
+     * @param {*} text 
+     * @returns 
+     */
     function findTimeMatches(text) {
         if (!text || !matchRegex) return [];
 

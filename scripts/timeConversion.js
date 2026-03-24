@@ -80,7 +80,7 @@ export function getHoursAndMinutes(time, ampm) {
 /**
  * determines if daylight savings is currently active in North America given a date
  * @param {Date} date a date
- * @returns if the given date has daylight savings in North America
+ * @returns {Boolean} if the given date has daylight savings in North America
  */
 function isNorthAmericaDST(date) {
     const year = date.getFullYear();
@@ -101,7 +101,7 @@ function isNorthAmericaDST(date) {
 /**
  * determines if daylight savings is currently active in Australia given a date
  * @param {Date} date a date
- * @returns if the given date has daylight savings in Australia
+ * @returns {Boolean} if the given date has daylight savings in Australia
  */
 function isAustraliaDST(date) {
     const year = date.getFullYear();
