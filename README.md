@@ -7,7 +7,8 @@ A Chrome Extension that helps you work with time zones in three different ways:
 - manually convert between any two time zones from the popup
 
 The project is built with Manifest V3 and uses a popup UI, a background service worker, and a manifest-declared content script.
-The projecy also uses a cloudflare wrangler for serverless and quick retrieval from API endpoints.
+The project also uses a cloudflare wrangler for serverless and quick retrieval from API endpoints, for more information on how the worker works,
+the GitHub repository is located: here `https://github.com/LegitAgent/cloudflare-workerwrangler-serverless`.
 
 ## Features
 
