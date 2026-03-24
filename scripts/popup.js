@@ -1,8 +1,8 @@
 import { DOM } from "./dom.js";
 import { storageLocal, storageSession } from "./storage.js";
 import { savePopupState, restoreState } from "./manageState.js";
-import { applyTimezoneUI, updateCopyPasteClearButton, clearCopyPasteInput, setupTimePickerOptions,
-         convertTime, clearTimezonePicker } from "./ui.js";
+import { applyTimezoneUI, updateCopyPasteClearButton, clearCopyPasteInput,
+         convertTime, clearTimezonePicker, setupExtensionToggle } from "./ui.js";
 import { getLocation, fetchTimezone, fetchTimezoneList } from "./api.js";
 import { initCustomDropdowns } from "./timezonePicker.js";
 import { setUpTabs } from "./tabs.js";
@@ -41,7 +41,7 @@ async function handleLocationRequest() {
 }
 
 /**
- * gets the list of time zones from timezonedb and initializes them as a list
+ * gets the list of time zones from the API and initializes them as a list
  */
 async function handleTimezoneListRequest() {
     try {
@@ -81,7 +81,7 @@ function createInstructionWindow() {
  * checks if the window removed was the windowID, if so set windowID to null.
  */
 chrome.windows.onRemoved.addListener((closedId) => {
-    if (DOM.windowID && closedId === DOM.windowID) {
+    if (closedId === DOM.windowID) {
         console.log("Manual window closed.");
         DOM.windowID = null; 
         savePopupState();
@@ -91,20 +91,20 @@ chrome.windows.onRemoved.addListener((closedId) => {
 /**
  * initialization of the popup
  */
-function init() {
+async function init() {
     setUpTabs();
+
     DOM.copyPasteInput.addEventListener("input", () => {
         updateCopyPasteClearButton();
         savePopupState();
     });
+
     DOM.clearCopyPasteButton?.addEventListener("click", clearCopyPasteInput);
     updateCopyPasteClearButton();
     
     DOM.locationButton.addEventListener("click", handleLocationRequest);
 
-    DOM.hourPicker.addEventListener("change", savePopupState);
-    DOM.minutePicker.addEventListener("change", savePopupState);
-    DOM.ampmPicker.addEventListener("change", savePopupState);
+    DOM.inputTimeConvert.addEventListener("change", savePopupState);
 
     DOM.convertButton.addEventListener("click", convertTime);
     DOM.copyPasteConvertButton.addEventListener("click", convertPastedTime);
@@ -117,10 +117,10 @@ function init() {
         clearTimezonePicker(DOM.targetZoneInput, DOM.targetZoneValue, DOM.targetZoneList);
     });
     
-    setupTimePickerOptions();
+    await handleTimezoneListRequest();
+    await restoreState();
 
-    handleTimezoneListRequest();
-    restoreState();
+    setupExtensionToggle();
     
     DOM.openManualIcon.addEventListener("click", () => {
         if (DOM.windowID) {

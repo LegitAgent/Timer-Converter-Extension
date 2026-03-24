@@ -12,6 +12,19 @@
 
     <div class="title unselectable">Time Zone Converter</div>
 
+    <div class="toggleRow">
+        <div class="toggleTextWrap">
+            <span class="toggleLabel">Auto Detect Time Zone</span>
+            <span class="toggleSubtext" id="toggleStatusText">OFF</span>
+        </div>
+
+        <label class="coolToggle">
+            <input type="checkbox" id="extensionToggle">
+            <span class="coolSlider"></span>
+        </label>
+    </div>
+    <div class="toggleError hidden" id="toggleErrorText"></div>
+
     <!-- NAV BAR -->
     <div class="nav">
 
@@ -33,24 +46,16 @@
             <!-- CONVERT TIME SECTION -->
             <div class="tabContent" id="convert">
 
-                <div class="section">
-                    <label for="timeInput">Input Time</label>
+                <div class="section" >
+                    <label for="timeInput" class="labelWithInfo">
+                        Input Time
+                        <span class="infoIconWrapper unselectable" data-tooltip="Automatically turns into military time if AM/PM field is not specified">
+                            <img src="/images/infoicon.svg" class="infoIcon" alt="info">
+                        </span>
+                    </label>
 
                     <div class="standardTimeInput">
-                        <select class="time-picker-select" id="hourSelector">
-                            <!-- AUTO GENERATE -->
-                        </select>
-
-                        <span class="time-separator">:</span>
-
-                        <select class="time-picker-select" id="minuteSelector">
-                            <!-- AUTO GENERATE -->
-                        </select>
-
-                        <select class="time-picker-select" id="ampmSelector">
-                            <option value="AM">AM</option>
-                            <option value="PM">PM</option>
-                        </select>
+                        <input type="text" id="convertTimeInput">
                     </div>
                 </div>
 
@@ -93,7 +98,7 @@
                 </div>
 
                 <div class="section">
-                    <button class="unselectable" class="convertBtn" id="convertTimeZone">Convert</button>
+                    <button class="unselectable convertBtn" id="convertTimeZone">Convert</button>
                 </div>
 
                 <div class="section">

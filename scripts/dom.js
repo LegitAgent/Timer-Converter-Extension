@@ -5,10 +5,16 @@ export const DOM = {
     windowID: null,
 
     locationButton: document.getElementById("getLocation"),
-    timezoneDiv: document.getElementById("timezone"),
+    timezoneOutput: document.getElementById("timezone"),
     tabs: document.querySelectorAll(".navBtn"),
     slider: document.querySelector(".navSlider"),
     track: document.querySelector(".tabsTrack"),
+
+    extensionToggle: document.getElementById("extensionToggle"),
+    toggleStatusText: document.getElementById("toggleStatusText"),
+    toggleErrorText: document.getElementById("toggleErrorText"),
+
+    inputTimeConvert: document.getElementById("convertTimeInput"),
 
     sourceZoneInput: document.getElementById("sourceZoneSearch"),
     sourceZoneValue: document.getElementById("sourceZone"),
@@ -19,16 +25,13 @@ export const DOM = {
     targetZoneValue: document.getElementById("targetZone"),
     targetZoneList: document.getElementById("targetZoneList"),
     clearTargetZoneButton: document.getElementById("clearTargetZone"),
-    
-    hourPicker: document.getElementById("hourSelector"),
-    minutePicker: document.getElementById("minuteSelector"),
-    ampmPicker: document.getElementById("ampmSelector"),
 
     convertButton: document.getElementById("convertTimeZone"),
     convertOutput: document.getElementById("convertTimeZoneOutput"),
 
     copyPasteInput: document.getElementById("copyPasteInput"),
     copyPasteConvertButton: document.getElementById("convertCopyPaste"),
+
     copyPasteOutput: document.getElementById("convertCopyPasteOutput"),
     clearCopyPasteButton: document.getElementById("clearCopyPasteInput"),
     copyPasteWrapper: document.querySelector(".textareaWrap"),

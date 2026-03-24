@@ -113,8 +113,17 @@
                 <div class="exampleBlock">
                     <ul>
                         <li><code>IST</code> is ambiguous since it can mean Israel Standard Time
-                        and India Standard Time which have different UTC offsets, in this case,
-                        we specify them accordingly as: <code>IST-ISRAEL</code> and <code>IST</code> respectively.</li>
+                        , Irish Standard Time, and India Standard Time which have different UTC offsets, in this case,
+                        we specify them accordingly as: <code>IST-ISRAEL</code>, <code>IST-IRISH</code> and <code>IST</code> respectively.</li>
+                    </ul>
+                </div>
+                The same rule applies for the auto detection of time zones as well.
+                For example:
+                <div class="exampleBlock">
+                    <ul>
+                        <li>If <code>CST</code> is written, the auto detector will automatically assume that it is <b>Central Standard Time</b> 
+                        , meaning if the context of CST specifically implies that it isn't the default (e.g. it specifies that it is in China Standard Time), 
+                        then the time zone conversion will NOT be accurate.
                     </ul>
                 </div>
                 <p class="sectionText">
@@ -218,6 +227,12 @@
                             <td><code>IST-ISRAEL</code></td>
                             <td>UTC+2</td>
                             <td>Israel Standard Time</td>
+                        </tr>
+
+                        <tr>
+                            <td><code>IST-IRISH</code></td>
+                            <td>UTC+1</td>
+                            <td>Irish Standard Time</td>
                         </tr>
 
                         <tr>

@@ -3,8 +3,8 @@ import { storageLocal } from "./storage.js";
 import { updateCopyPasteClearButton } from "./ui.js"
 
 /**
- * saves the current state of the popup, and stores it to google local storage
- * @returns 
+ * saves the current state of the popup and stores it in chrome local storage
+ * @returns {Promise<void>}
  */
 export async function savePopupState() {
     try {
@@ -15,16 +15,15 @@ export async function savePopupState() {
                 windowID: DOM.windowID,
                 tab: activeTab,
                 cachedCopyPasteInput: DOM.copyPasteInput.value,
-                timezoneOut: DOM.timezoneDiv.textContent,
+                timezoneOut: DOM.timezoneOutput.textContent,
                 cachedSourceZoneInput: DOM.sourceZoneInput.value,
                 cachedSourceZoneValue: DOM.sourceZoneValue.value,
                 cachedTargetZoneInput: DOM.targetZoneInput.value,
                 cachedTargetZoneValue: DOM.targetZoneValue.value,
-                cachedHour: DOM.hourPicker.value,
-                cachedMinute: DOM.minutePicker.value,
-                cachedAMPM: DOM.ampmPicker.value,
-                cachedConvertOutput: DOM.convertOutput.innerHTML,
-                cachedCopyPasteOutput: DOM.copyPasteOutput.innerHTML
+                cachedInputTimeConvert: DOM.inputTimeConvert.value,
+                cachedConvertOutput: DOM.convertOutput.textContent,
+                cachedCopyPasteOutput: DOM.copyPasteOutput.textContent,
+                extensionEnabled: DOM.extensionToggle?.checked ?? false,
             }
         });
     } catch(error) {
@@ -34,49 +33,56 @@ export async function savePopupState() {
 }
 
 /**
- * accesses google local storage, and retrieves all stored states of the popup
- * @returns 
+ * restores the saved popup state from chrome local storage
+ * @returns {Promise<void>}
  */
 export async function restoreState() {
     try {
         const { popupState } = await storageLocal.get("popupState");
         if (!popupState) return;
 
-        if(popupState.windowID != null) {
+        if (popupState.windowID != null) {
             DOM.windowID = popupState.windowID;
         }
 
+        if (popupState.extensionEnabled != null && DOM.extensionToggle) {
+            DOM.extensionToggle.checked = popupState.extensionEnabled;
+
+            if (DOM.toggleStatusText) {
+                DOM.toggleStatusText.textContent = popupState.extensionEnabled ? "ON" : "OFF";
+                DOM.toggleStatusText.style.color = popupState.extensionEnabled ? "#22c55e" : "#94a3b8";
+            }
+        }
+        
         if (popupState.cachedCopyPasteInput != null) {
             DOM.copyPasteInput.value = popupState.cachedCopyPasteInput;
         }
 
-        if(popupState.cachedSourceZoneInput != null && popupState.cachedSourceZoneValue != null) {
+        if (popupState.cachedSourceZoneInput != null && popupState.cachedSourceZoneValue != null) {
             DOM.sourceZoneInput.value = popupState.cachedSourceZoneInput;
             DOM.sourceZoneValue.value = popupState.cachedSourceZoneValue;
         }
 
-        if(popupState.cachedTargetZoneInput != null && popupState.cachedTargetZoneValue != null) {
+        if (popupState.cachedTargetZoneInput != null && popupState.cachedTargetZoneValue != null) {
             DOM.targetZoneInput.value = popupState.cachedTargetZoneInput;
             DOM.targetZoneValue.value = popupState.cachedTargetZoneValue;
         }
 
-        if(popupState.cachedHour != null && popupState.cachedMinute != null && popupState.cachedAMPM != null) {
-            DOM.hourPicker.value = popupState.cachedHour;
-            DOM.minutePicker.value = popupState.cachedMinute;
-            DOM.ampmPicker.value = popupState.cachedAMPM;
+        if (popupState.cachedInputTimeConvert != null) {
+            DOM.inputTimeConvert.value = popupState.cachedInputTimeConvert;
         }
 
         if (popupState.timezoneOut != null) {
-            DOM.timezoneDiv.textContent = popupState.timezoneOut;
+            DOM.timezoneOutput.textContent = popupState.timezoneOut;
         }
 
-        if(popupState.cachedConvertOutput != null) {
-            DOM.convertOutput.innerHTML = popupState.cachedConvertOutput;
+        if (popupState.cachedConvertOutput != null) {
+            DOM.convertOutput.textContent = popupState.cachedConvertOutput;
         }
         updateCopyPasteClearButton();
 
-        if(popupState.cachedCopyPasteOutput != null) {
-            DOM.copyPasteOutput.innerHTML = popupState.cachedCopyPasteOutput;
+        if (popupState.cachedCopyPasteOutput != null) {
+            DOM.copyPasteOutput.textContent = popupState.cachedCopyPasteOutput;
         }
 
         if (popupState.tab != null) {
