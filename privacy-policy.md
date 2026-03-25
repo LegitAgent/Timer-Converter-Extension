@@ -88,7 +88,7 @@ Other than the optional location lookup and timezone list requests, the extensio
 The extension does not:
 
 - sell your personal information
-- use advertising SDKs
+- use advertising SDK's
 - track your browsing history for analytics or profiling
 - require login credentials
 - collect payment information
