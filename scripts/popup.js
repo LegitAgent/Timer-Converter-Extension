@@ -2,7 +2,7 @@ import { DOM } from "./dom.js";
 import { storageLocal, storageSession } from "./storage.js";
 import { savePopupState, restoreState } from "./manageState.js";
 import { applyTimezoneUI, updateCopyPasteClearButton, clearCopyPasteInput,
-         convertTime, clearTimezonePicker, setupExtensionToggle } from "./ui.js";
+         convertTime, clearTimezonePicker, setupExtensionToggle, clearTimeInput } from "./ui.js";
 import { getLocation, fetchTimezone, fetchTimezoneList } from "./api.js";
 import { initCustomDropdowns } from "./timezonePicker.js";
 import { setUpTabs } from "./tabs.js";
@@ -109,13 +109,17 @@ async function init() {
     DOM.convertButton.addEventListener("click", convertTime);
     DOM.copyPasteConvertButton.addEventListener("click", convertPastedTime);
 
-    DOM.clearSourceZoneButton?.addEventListener("click", () => {
+    DOM.clearSourceZoneButton.addEventListener("click", () => {
         clearTimezonePicker(DOM.sourceZoneInput, DOM.sourceZoneValue, DOM.sourceZoneList);
     });
 
-    DOM.clearTargetZoneButton?.addEventListener("click", () => {
+    DOM.clearTargetZoneButton.addEventListener("click", () => {
         clearTimezonePicker(DOM.targetZoneInput, DOM.targetZoneValue, DOM.targetZoneList);
     });
+
+    DOM.clearTimeInputButton.addEventListener("click", () => {
+        clearTimeInput(DOM.inputTimeConvert)
+    })
     
     await handleTimezoneListRequest();
     await restoreState();

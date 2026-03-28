@@ -155,6 +155,17 @@ export function clearTimezonePicker(inputEl, hiddenEl, listEl) {
 }
 
 /**
+ * clears a time zone input
+ * @param {*} el element
+ */
+export function clearTimeInput(el) {
+    el.value = "";
+
+    savePopupState();
+    el.focus();
+}
+
+/**
  * initializes the extension toggle and adds a change listener that updates UI state, saves it, and applies the toggle behavior to the current tab.
  * immediate action for the toggle on/off
  */

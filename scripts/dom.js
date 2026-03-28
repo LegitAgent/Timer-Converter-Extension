@@ -15,6 +15,7 @@ export const DOM = {
     toggleErrorText: document.getElementById("toggleErrorText"),
 
     inputTimeConvert: document.getElementById("convertTimeInput"),
+    clearTimeInputButton: document.getElementById("clearTimeZone"),
 
     sourceZoneInput: document.getElementById("sourceZoneSearch"),
     sourceZoneValue: document.getElementById("sourceZone"),

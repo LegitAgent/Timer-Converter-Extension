@@ -117,7 +117,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
                             tz: item.timezone
                         }, localTimezone);
 
-                        const clean = converted.replace(/\s+in\s+.+$/, ""); // clean format
+                        const clean = converted.replace(/\s+in\s+.+$/, ""); // clean format (eliminate "in ${toTime.zoneName}") 
                         return {
                             key: item.key,
                             convertedTime: `${clean} ${localTimezone.zoneName}`

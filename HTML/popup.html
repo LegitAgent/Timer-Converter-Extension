@@ -55,7 +55,12 @@
                     </label>
 
                     <div class="standardTimeInput">
-                        <input type="text" id="convertTimeInput">
+                        <div class="timezoneInputWrap">
+                            <input type="text" id="convertTimeInput" placeholder="Enter valid time" autocomplete="off">
+                            <button type="button" class="clearTimezoneBtn unselectable" id="clearTimeZone" aria-label="Clear from timezone">
+                                <img src="/images/trashicon.svg" class="trashIcon" alt="clear">
+                            </button>
+                        </div>
                     </div>
                 </div>
 
