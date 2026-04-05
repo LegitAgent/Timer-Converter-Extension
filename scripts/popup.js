@@ -3,7 +3,7 @@ import { storageLocal, storageSession } from "./storage.js";
 import { savePopupState, restoreState } from "./manageState.js";
 import { applyTimezoneUI, updateCopyPasteClearButton, clearCopyPasteInput,
          convertTime, clearTimezonePicker, setupExtensionToggle, clearTimeInput } from "./ui.js";
-import { getLocation, fetchTimezone, fetchTimezoneList } from "./api.js";
+import { getLocationWithFallback, getIntlFallbackTimezone, fetchTimezone, fetchTimezoneList } from "./api.js";
 import { initCustomDropdowns } from "./timezonePicker.js";
 import { setUpTabs } from "./tabs.js";
 import { convertPastedTime } from "./copyPasteConverter.js";
@@ -12,30 +12,49 @@ import { convertPastedTime } from "./copyPasteConverter.js";
  * gets the location of the user, and updates the text content of #timezone to the user's local time zone
  */
 async function handleLocationRequest() {    
+    if (DOM.locationButton.classList.contains("loading")) {
+        return;
+    }
+
     DOM.locationButton.classList.add("loading");
     DOM.locationButton.textContent = "Detecting...";
+    DOM.timezoneOutput.classList.remove("success");
+    DOM.timezoneOutput.textContent = "";
 
     try {
-        const { latitude, longitude } = await getLocation();
+        const location = await getLocationWithFallback();
         const { timezone_now, cached_lat, cached_lng } = await storageLocal.get(["timezone_now", "cached_lat", "cached_lng"]);
 
-        // check if user is in the same spot (approx 100m)
-        const isSameLocation = cached_lat !== undefined &&
-                               cached_lng !== undefined &&
-                               Math.abs(latitude - cached_lat) < 0.001 &&
-                               Math.abs(longitude - cached_lng) < 0.001;
+        if (location) {
+            const { latitude, longitude } = location;
 
-        if (timezone_now && isSameLocation) {
-            applyTimezoneUI(timezone_now);
-            console.log("Loaded time zone from cache");
-        } else {
+            const isSameLocation = cached_lat !== undefined &&
+                                   cached_lng !== undefined &&
+                                   Math.abs(latitude - cached_lat) < 0.001 &&
+                                   Math.abs(longitude - cached_lng) < 0.001;
+
+            if (timezone_now && isSameLocation) {
+                applyTimezoneUI(timezone_now);
+                console.log("Loaded time zone from cache");
+                return;
+            }
+
             console.log("Fetching from server...");
             const data = await fetchTimezone(latitude, longitude);
             applyTimezoneUI(data);
+            return;
         }
+
+        // fallback to non-api call if geolocation is unavailable
+        const intlTimezone = await getIntlFallbackTimezone();
+        await storageLocal.set({ timezone_now: intlTimezone });
+        applyTimezoneUI(intlTimezone);
+        console.log("Geolocation timed out. Fell back to browser timezone.");
     } catch (error) {
         DOM.locationButton.classList.remove("loading");
-        DOM.locationButton.textContent = "Error";
+        DOM.locationButton.textContent = "Try Again";
+        DOM.timezoneOutput.classList.remove("success");
+        DOM.timezoneOutput.textContent = error?.message || "Unable to detect timezone.";
         console.error(error);
     }
 }

@@ -1,6 +1,8 @@
 import { storageLocal } from "./storage.js";
 import { timezoneOffsets } from "./timezoneOffsets.js";
 import { convertToLocal } from "./timeConversion.js";
+
+const FETCH_TIMEOUT_MS = 15000;
 /**
  * filters out URLs where the extension should not sync page state
  * @param {string} url a URL string input
@@ -153,15 +155,25 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return;
     }
 
-    fetch(url)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+    fetch(url, { signal: controller.signal })
         .then(res => {
+            clearTimeout(timeoutId);
             if (!res.ok) throw new Error(`Server Error: ${res.status}`);
             return res.json();
         })
         .then(data => sendResponse({ success: true, data }))
         .catch(err => {
+            clearTimeout(timeoutId);
             console.error("Fetch failed: ", err);
-            sendResponse({ success: false, error: err.message });
+            sendResponse({
+                success: false,
+                error: err.name === "AbortError"
+                    ? "Request timed out before the timezone service responded."
+                    : err.message
+            });
         });
 
     return true;
