@@ -21,8 +21,8 @@ export async function savePopupState() {
                 cachedTargetZoneInput: DOM.targetZoneInput.value,
                 cachedTargetZoneValue: DOM.targetZoneValue.value,
                 cachedInputTimeConvert: DOM.inputTimeConvert.value,
-                cachedConvertOutput: DOM.convertOutput.textContent,
-                cachedCopyPasteOutput: DOM.copyPasteOutput.textContent,
+                cachedConvertOutput: DOM.convertOutput.innerHTML,
+                cachedCopyPasteOutput: DOM.copyPasteOutput.innerHTML,
                 extensionEnabled: DOM.extensionToggle?.checked ?? false,
             }
         });
@@ -77,12 +77,12 @@ export async function restoreState() {
         }
 
         if (popupState.cachedConvertOutput != null) {
-            DOM.convertOutput.textContent = popupState.cachedConvertOutput;
+            DOM.convertOutput.innerHTML = popupState.cachedConvertOutput;
         }
         updateCopyPasteClearButton();
 
         if (popupState.cachedCopyPasteOutput != null) {
-            DOM.copyPasteOutput.textContent = popupState.cachedCopyPasteOutput;
+            DOM.copyPasteOutput.innerHTML = popupState.cachedCopyPasteOutput;
         }
 
         if (popupState.tab != null) {

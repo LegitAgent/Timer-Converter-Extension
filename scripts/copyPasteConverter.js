@@ -120,11 +120,11 @@ function isValid(map) {
  */
 function errorMessage(idx) {
     if (idx == 1) {
-        DOM.copyPasteOutput.innerHTML = "<b>Invalid time or invalid time format.</b>";
+        DOM.copyPasteOutput.innerHTML = "<red><b>Invalid time or invalid time format.</b></red>";
     } else if (idx == 2) {
-        DOM.copyPasteOutput.innerHTML = "<b>Invalid AM/PM format.</b>";
+        DOM.copyPasteOutput.innerHTML = "<red><b>Invalid AM/PM format.</b></red>";
     } else if (idx == 3) {
-        DOM.copyPasteOutput.innerHTML = "<b>Invalid time zone.</b>";
+        DOM.copyPasteOutput.innerHTML = "<red><b>Invalid time zone.</b></red>";
     } else { // default
         DOM.copyPasteOutput.innerHTML = "Error"
     }
@@ -139,7 +139,8 @@ function errorMessage(idx) {
 export async function convertPastedTime() {
     const { timezone_now } = await storageLocal.get("timezone_now");
     if (!timezone_now) {
-        DOM.copyPasteOutput.textContent = "Get your time zone first!";
+        DOM.copyPasteOutput.innerHTML = "<red>Get your time zone first!</red>";
+        savePopupState();
         return;
     }
     
@@ -151,7 +152,7 @@ export async function convertPastedTime() {
         let validMap = isStandard || isReverse;
 
         if (!validMap) {
-            DOM.copyPasteOutput.innerHTML = "Invalid format, use format:<br> <b>(00:00) (AM/PM optional) (time zone)</b> <br> or <br> <b>(time zone) (00:00) (AM/PM optional)</b>";
+            DOM.copyPasteOutput.innerHTML = "<red><b>Invalid format, use format:<br> (00:00) (AM/PM) (timezone) <br> or (timezone) (00:00) (AM/PM)</b></red>";
             savePopupState();
             return false;
         }

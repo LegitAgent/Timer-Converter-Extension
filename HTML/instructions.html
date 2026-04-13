@@ -12,40 +12,54 @@
             <h1>Copy-Paste Converter Guide</h1>
 
             <div class="manualNotice">
-                <strong>Important:</strong> Some timezone abbreviations depend on
+                <strong>IMPORTANT:</strong> Some timezone abbreviations depend on
                 <strong>Daylight Saving Time (DST)</strong>. For example,
                 <code>PT</code> may refer to either <code>PST</code> or <code>PDT</code>
                 depending on the date, (e.g. <code>PDT</code> stands for Pacific Daylight Time
-                and <code>PST</code> stands for Pacific Savings Time.) Because of this, you should enter the
-                <strong>EXACT timezone abbreviation shown in the original source</strong>.
-                Do not assume that a broad regional label like <code>PT</code> always means the same UTC offset.
+                and <code>PST</code> stands for Pacific Savings Time.) So you should enter the
+                <strong><red>EXACT</red></strong> timezone abbreviation shown in the original source.
+                Do not assume that a broad regional label like <code>PT</code> will always mean the same UTC offset.
             </div>
 
             <p class="manualIntro">
                 This tool converts pasted times only when they follow the specific supported
                 input formats and use a recognized timezone abbreviation or UTC offset with regards to time zone offsets.
                 To get the most accurate result, enter the time exactly as it appears
-                in the original source.
+                in the original source. This tool is caps insensitive.
             </p>
 
             <section class="manualSection">
                 <h2>Supported Formats</h2>
+                <table class="manualTable">
+                    <thead>
+                        <tr>
+                            <th>Time first (Standard Formatting)</th>
+                            <th>Timezone first (Reverse Formatting)</th>
+                        </tr>
+                    </thead>
 
-                <h3>1. Time first (Standard Formatting)</h3>
-                <div class="exampleBlock">
-                    <div><code>8 PM PST</code></div>
-                    <div><code>8:30 PM JST</code></div>
-                    <div><code>2030 UTC+8</code></div>
-                    <div><code>0030 UTC+8</code></div>
-                </div>
+                    <tbody>
+                        <tr>
+                            <td><code>8 PM PST</code></td>
+                            <td><code>PST 8 PM</code></td>
+                        </tr>
 
-                <h3>2. Timezone first (Reverse Formatting)</h3>
-                <div class="exampleBlock">
-                    <div><code>PST 8 PM</code></div>
-                    <div><code>JST 8:30 PM</code></div>
-                    <div><code>UTC+8 2030</code></div>
-                    <div><code>UTC+8 0030</code></div>
-                </div>
+                        <tr>
+                            <td><code>8:30 PM JST</code></td>
+                            <td><code>JST 8:30 PM</code></td>
+                        </tr>
+
+                        <tr>
+                            <td><code>2030 UTC+8</code></td>
+                            <td><code>UTC+8 2030</code></td>
+                        </tr>
+
+                        <tr>
+                            <td><code>0030 UTC+8</code></td>
+                            <td><code>UTC+8 0030</code></td>
+                        </tr>
+                    </tbody>
+                </table>
             </section>
 
             <section class="manualSection">
@@ -76,58 +90,84 @@
                 <h2>Timezone Rules</h2>
                 <ul>
                     <li>Only the supported timezone abbreviations and UTC offset tokens will work.</li>
-                    <li>E.g.: <code>PST</code>, <code>EST</code>, <code>JST</code>, <code>PHT</code>, <code>UTC+8</code>, <code>UTC-5</code>.</li>
+                    <ul>
+                        <li>E.g.: <code>PST</code>, <code>EST</code>, <code>JST</code>, <code>PHT</code>, <code>UTC+8</code>, <code>UTC-5</code>.</li>
+                    </ul>
                     <li>Full timezone names like <code>Asia/Manila</code> or <code>Pacific Time</code> will not work.</li>
                     <li>You should always detect your own timezone first before converting.</li>
+                    <li>You cannot have other unnecessary words like <code>in</code>, <code>at</code>, and etc.</li>
                 </ul>
             </section>
 
             <section class="manualSection">
-                <h2>Examples That Work</h2>
-                <div class="exampleBlock">
-                    <div><code>8 PM PST</code></div>
-                    <div><code>PST 8 PM</code></div>
-                    <div><code>13:45 CET</code></div>
-                    <div><code>CET 1345</code></div>
-                    <div><code>2300 UTC+8</code></div>
-                    <div><code>UTC+8 11:00 PM</code></div>
-                </div>
-            </section>
+                <table class="manualTable">
+                    <thead>
+                        <tr>
+                            <th>Examples That Work</th>
+                            <th>Examples That Will Not Work</th>
+                        </tr>
+                    </thead>
 
-            <section class="manualSection">
-                <h2>Examples That Will Not Work</h2>
-                <div class="exampleBlock">
-                    <div><code>8 o'clock PST</code></div>
-                    <div><code>Pacific Standard Time 8 PM</code></div>
-                    <div><code>Manila 8 PM</code></div>
-                    <div><code>8PM in Tokyo</code></div>
-                </div>
+                    <tbody>
+                        <tr>
+                            <td><code>8 PM PST</code></td>
+                            <td><code>8 o'clock PST</code></td>
+                        </tr>
+
+                        <tr>
+                            <td><code>PST 8 PM</code></td>
+                            <td><code>Pacific Standard Time 8 PM</code></td>
+                        </tr>
+
+                        <tr>
+                            <td><code>13:45 CET</code></td>
+                            <td><code>Manila 8 PM</code></td>
+                        </tr>
+
+                        <tr>
+                            <td><code>CET 1345</code></td>
+                            <td><code>8PM in Tokyo</code></td>
+                        </tr>
+
+                        <tr>
+                            <td><code>2300 UTC+8</code></td>
+                            <td><code>UTC+8 at 2300</code></td>
+                        </tr>
+
+                        <tr>
+                            <td><code>UTC+8 11:00 PM</code></td>
+                            <td><code>11pm from UTC+8</code></td>
+                        </tr>
+                    </tbody>
+                </table>
             </section>
 
             <section class="manualSection">
                 <h2>For Ambiguous Timezones</h2>
                 <p class="sectionText">
-                There are certain timezones wherein they have different Coordinated Universal Time (UTC) offsets,
-                but similar abbreviations. In these cases, the key-value mapping for these were changed to their specified continent/country.
-                For example:
+                There are certain timezones where they have different UTC offsets, but similar abbreviations. 
+                The key-value mapping for these were changed to their specified continent/country.
                 <div class="exampleBlock">
                     <ul>
-                        <li><code>IST</code> is ambiguous since it can mean Israel Standard Time
-                        , Irish Standard Time, and India Standard Time which have different UTC offsets, in this case,
-                        we specify them accordingly as: <code>IST-ISRAEL</code>, <code>IST-IRISH</code> and <code>IST</code> respectively.</li>
+                        <li><code>IST</code> is ambiguous since it can mean <b>Israel Standard Time</b>
+                        , <b>Irish Standard Time</b>, and <b>India Standard Time</b>, so
+                        we specify them as: <code>IST-ISRAEL</code>, <code>IST-IRISH</code> and <code>IST</code> respectively.</li>
                     </ul>
                 </div>
+
+                <br>
+
                 The same rule applies for the auto detection of time zones as well.
-                For example:
                 <div class="exampleBlock">
                     <ul>
-                        <li>If <code>CST</code> is written, the auto detector will automatically assume that it is <b>Central Standard Time</b> 
-                        , meaning if the context of CST specifically implies that it isn't the default (e.g. it specifies that it is in China Standard Time), 
-                        then the time zone conversion will NOT be accurate.
+                        <li>If <code>CST</code> is written, the auto detector will automatically assume that it is <b>Central Standard Time</b>, and not <b>China Standard Time</b>.
                     </ul>
                 </div>
+
+                <br>
+
                 <p class="sectionText">
-                Hence, below is a table for all ambiguous timezones and their corresponding codes for each:
+                Table for all ambiguous timezones and their corresponding codes for each:
                 </p>
                 <table class="manualTable">
                     <thead>

@@ -68,7 +68,7 @@ export function convertTime() {
     try {
         // ensure zones are selected
         if (!DOM.sourceZoneValue.value || !DOM.targetZoneValue.value) {
-            DOM.convertOutput.textContent = "Please select both timezones.";
+            DOM.convertOutput.innerHTML = "<red><b>Please select both timezones.</b></red>";
             return;
         }
 
@@ -80,14 +80,14 @@ export function convertTime() {
         let convertedTime = isStandard(sanitizedText);
 
         if (!convertedTime) {
-            DOM.convertOutput.textContent = "Please enter a valid time. Format is: HH:MM AM/PM";
+            DOM.convertOutput.innerHTML = "<red><b>Please enter a valid time. Format is: HH:MM AM/PM</b></red>";
             return;
         }
 
         const parsedTime = getHoursAndMinutes(convertedTime.time, convertedTime.ampm);
 
         if (!parsedTime) {
-            DOM.convertOutput.textContent = "Please enter a valid time. Format is: HH:MM AM/PM";
+            DOM.convertOutput.innerHTML = "<red><b>Please enter a valid time. Format is: HH:MM AM/PM</b></red>";
             return;
         }
 
@@ -134,7 +134,7 @@ export function convertTime() {
         savePopupState();
     } catch (err) {
         console.error("Conversion failed:", err);
-        DOM.convertOutput.textContent = "Error parsing timezone data.";
+        DOM.convertOutput.innerHTML = "<red><b>Error parsing timezone data.</b></red>";
     }
 }
 

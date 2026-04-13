@@ -9,6 +9,7 @@ html,
 body {
   width: 100%;
   min-height: 100%;
+  text-align: justify;
 }
 
 body {
@@ -18,6 +19,10 @@ body {
   color: #e2e8f0;
   overflow-y: auto;
   padding: 24px;
+}
+
+red {
+    color: red;
 }
 
 .manualPage {
@@ -45,7 +50,7 @@ h1 {
 
 .manualIntro {
   font-size: 0.98rem;
-  line-height: 1.7;
+  line-height: 2;
   color: #cbd5e1;
   margin-bottom: 26px;
 }
@@ -57,7 +62,7 @@ h1 {
   background: rgba(34, 197, 94, 0.10);
   border: 1px solid rgba(34, 197, 94, 0.28);
   color: #dcfce7;
-  line-height: 1.7;
+  line-height: 2;
 }
 
 .manualSection + .manualSection {
@@ -114,7 +119,7 @@ h3 {
 p,
 li,
 div {
-  line-height: 1.7;
+  line-height: 2;
   font-size: medium;
 }
 

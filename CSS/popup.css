@@ -23,6 +23,10 @@ body {
   overflow: hidden; /* Prevents scrollbar leak */
 }
 
+red {
+  color: red;
+}
+
 /* Hide scrollbars for Chrome/Safari/Webkit */
 ::-webkit-scrollbar {
   width: 10px;
@@ -204,6 +208,15 @@ button:hover {
   color: #22c55e;
 }
 
+.timezoneEmpty {
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 /* ===== 7. INPUT WRAPPERS & CLEAR BUTTONS ===== */
 .timezoneInputWrap, .textareaWrap {
   position: relative;
@@ -275,7 +288,7 @@ button:hover {
   content: attr(data-tooltip);
   position: absolute;
 
-  top: 140%;      /* 👈 switch from bottom → top */
+  top: 140%;      /* switch from bottom -> top */
   left: 0;
 
   background: #222;
