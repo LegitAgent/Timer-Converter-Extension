@@ -166,6 +166,35 @@ export function clearTimeInput(el) {
 }
 
 /**
+ * applies the popup theme and updates the toggle button metadata
+ * @param {boolean} lightModeEnabled whether light mode is active
+ */
+export function applyPopupTheme(lightModeEnabled) {
+    document.body.dataset.theme = lightModeEnabled ? "light" : "dark";
+
+    if (!DOM.themeToggle) return;
+
+    DOM.themeToggle.setAttribute(
+        "aria-label",
+        lightModeEnabled ? "Switch to dark mode" : "Switch to light mode"
+    );
+    DOM.themeToggle.title = lightModeEnabled ? "Toggle dark mode" : "Toggle light mode";
+}
+
+/**
+ * initializes the popup theme toggle
+ */
+export function setupThemeToggle() {
+    if (!DOM.themeToggle) return;
+
+    DOM.themeToggle.addEventListener("click", async () => {
+        const lightModeEnabled = document.body.dataset.theme !== "light";
+        applyPopupTheme(lightModeEnabled);
+        await savePopupState();
+    });
+}
+
+/**
  * initializes the extension toggle and adds a change listener that updates UI state, saves it, and applies the toggle behavior to the current tab.
  * immediate action for the toggle on/off
  */

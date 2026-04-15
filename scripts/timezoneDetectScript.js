@@ -7,6 +7,7 @@
     const SKIP_SELECTOR = "input, textarea, script, style, [contenteditable='true']";
     const TIME_PATTERN = String.raw`(?:\d{1,2}:\d{2}|\d{3,4}|\d{1,2})`;
     const AMPM_PATTERN = String.raw`(?:A\.?M\.?|P\.?M\.?)`;
+    const CASE_SENSITIVE_TIMEZONES = new Set(["ART"]);
 
     let timezoneOffsets = null;
     let matchRegex = null;
@@ -34,21 +35,49 @@
         style.id = STYLE_ID;
         style.textContent = `
             .tz-highlight {
-                background: rgba(255, 230, 150, 0.4);
-                border-radius: 4px;
-                padding: 2px 4px;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.45em;
+                margin: 0 0.08em;
+                padding: 0.14em 0.38em 0.14em 0.44em;
+                border-radius: 999px;
+                background: linear-gradient(135deg, rgba(250, 204, 21, 0.18), rgba(251, 191, 36, 0.08));
+                box-shadow:
+                    inset 0 0 0 1px rgba(217, 119, 6, 0.2),
+                    0 1px 2px rgba(15, 23, 42, 0.08);
+                vertical-align: baseline;
+                line-height: 1.2;
+            }
+
+            .tz-source {
+                font-weight: 700;
+                color: inherit;
+                letter-spacing: 0.01em;
             }
 
             .tz-badge {
-                margin-left: 6px;
-                font-size: 0.75em;
-                color: white;
-                background: #333;
-                padding: 2px 6px;
-                border-radius: 10px;
+                font-size: 0.72em;
+                font-weight: 700;
+                color: #f8fafc;
+                background: linear-gradient(135deg, #0f172a, #1e293b);
+                padding: 0.2em 0.62em;
+                border-radius: 999px;
                 white-space: nowrap;
                 display: inline-block;
                 vertical-align: middle;
+                box-shadow:
+                    inset 0 0 0 1px rgba(148, 163, 184, 0.18),
+                    0 2px 6px rgba(15, 23, 42, 0.18);
+            }
+
+            .tz-badge::before {
+                content: "Local";
+                margin-right: 0.45em;
+                color: rgba(226, 232, 240, 0.72);
+                font-size: 0.88em;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
             }
         `;
 
@@ -202,6 +231,12 @@
             return true;
         }
 
+        // some timezone abbreviations are also common English words
+        // treat those as valid only when the page text uses their uppercase form
+        if (CASE_SENSITIVE_TIMEZONES.has(rawTimezone.toUpperCase()) && rawTimezone !== rawTimezone.toUpperCase()) {
+            return true;
+        }
+
         return false;
     }
 
@@ -257,7 +292,10 @@
         wrapper.setAttribute("data-tz-processed", "true"); // marker
         wrapper.setAttribute("data-original-text", matchText); // orig text to store for undoing
 
-        wrapper.append(document.createTextNode(matchText));
+        const source = document.createElement("span");
+        source.className = "tz-source";
+        source.textContent = matchText;
+        wrapper.append(source);
 
         const badge = document.createElement("span");
         badge.className = "tz-badge";

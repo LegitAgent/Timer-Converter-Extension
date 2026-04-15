@@ -14,6 +14,7 @@ export async function savePopupState() {
             popupState: {
                 windowID: DOM.windowID,
                 tab: activeTab,
+                lightModeEnabled: document.body.dataset.theme === "light",
                 cachedCopyPasteInput: DOM.copyPasteInput.value,
                 timezoneOut: DOM.timezoneOutput.textContent,
                 cachedSourceZoneInput: DOM.sourceZoneInput.value,
@@ -43,6 +44,18 @@ export async function restoreState() {
 
         if (popupState.windowID != null) {
             DOM.windowID = popupState.windowID;
+        }
+
+        if (popupState.lightModeEnabled != null) {
+            document.body.dataset.theme = popupState.lightModeEnabled ? "light" : "dark";
+
+            if (DOM.themeToggle) {
+                DOM.themeToggle.setAttribute(
+                    "aria-label",
+                    popupState.lightModeEnabled ? "Switch to dark mode" : "Switch to light mode"
+                );
+                DOM.themeToggle.title = popupState.lightModeEnabled ? "Toggle dark mode" : "Toggle light mode";
+            }
         }
 
         if (popupState.extensionEnabled != null && DOM.extensionToggle) {

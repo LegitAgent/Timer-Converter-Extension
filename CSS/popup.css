@@ -1,4 +1,62 @@
 /* ===== 1. BASE & RESET ===== */
+:root {
+  --page-bg: #0f172a;
+  --page-text: #e2e8f0;
+  --scroll-track: #0f172a;
+  --scroll-thumb: #334155;
+  --scroll-thumb-hover: #475569;
+  --panel-bg: rgba(30, 41, 59, 0.85);
+  --panel-border: rgba(255,255,255,0.05);
+  --muted-text: #94a3b8;
+  --strong-text: #e2e8f0;
+  --nav-bg: #1e293b;
+  --input-bg: #1e293b;
+  --input-border: rgba(255,255,255,0.08);
+  --list-bg: #1e293b;
+  --list-border: rgba(255,255,255,0.08);
+  --option-border: rgba(255,255,255,0.05);
+  --toggle-bg: rgba(15, 23, 42, 0.6);
+  --toggle-border: rgba(255, 255, 255, 0.06);
+  --toggle-shadow: rgba(255,255,255,0.03);
+  --icon-button-bg: rgba(255,255,255,0.08);
+  --icon-button-border: rgba(255,255,255,0.08);
+  --icon-color: #cbd5e1;
+  --tooltip-bg: #222;
+  --tooltip-text: #fff;
+  --success-bg: rgba(34,197,94,0.08);
+  --success-border: rgba(34,197,94,0.25);
+  --success-text: #22c55e;
+}
+
+body[data-theme="light"] {
+  --page-bg: #dbeafe;
+  --page-text: #0f172a;
+  --scroll-track: #dbeafe;
+  --scroll-thumb: #94a3b8;
+  --scroll-thumb-hover: #64748b;
+  --panel-bg: rgba(255, 255, 255, 0.88);
+  --panel-border: rgba(148, 163, 184, 0.28);
+  --muted-text: #475569;
+  --strong-text: #0f172a;
+  --nav-bg: #e2e8f0;
+  --input-bg: #f8fafc;
+  --input-border: rgba(148, 163, 184, 0.35);
+  --list-bg: #f8fafc;
+  --list-border: rgba(148, 163, 184, 0.32);
+  --option-border: rgba(148, 163, 184, 0.2);
+  --toggle-bg: rgba(241, 245, 249, 0.95);
+  --toggle-border: rgba(148, 163, 184, 0.35);
+  --toggle-shadow: rgba(255,255,255,0.55);
+  --icon-button-bg: rgba(255,255,255,0.7);
+  --icon-button-border: rgba(148, 163, 184, 0.35);
+  --icon-color: #334155;
+  --tooltip-bg: #0f172a;
+  --tooltip-text: #f8fafc;
+  --success-bg: rgba(34,197,94,0.1);
+  --success-border: rgba(34,197,94,0.28);
+  --success-text: #15803d;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -14,13 +72,14 @@ html {
 body {
   width: 340px;
   height: auto;
-  background: #0f172a;
-  color: #e2e8f0;
+  background: var(--page-bg);
+  color: var(--page-text);
   display: flex;
   justify-content: center;
   align-items: flex-start;
   padding: 18px 0;
   overflow: hidden; /* Prevents scrollbar leak */
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 red {
@@ -33,16 +92,16 @@ red {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: var(--scroll-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: var(--scroll-thumb);
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--scroll-thumb-hover);
 }
 
 .unselectable {
@@ -58,15 +117,79 @@ red {
   gap: 16px;
   padding: 22px;
   border-radius: 16px;
-  background: rgba(30, 41, 59, 0.85);
+  background: var(--panel-bg);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid var(--panel-border);
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .title {
   font-size: 1.1rem;
   font-weight: 600;
-  text-align: center;
+  color: var(--strong-text);
+}
+
+.themeToggle {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--icon-button-border);
+  background: var(--icon-button-bg);
+  color: var(--icon-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: none;
+}
+
+.themeToggle:hover {
+  box-shadow: none;
+}
+
+.themeIcon {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.themeSvg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.themeIconSun {
+  opacity: 0;
+  transform: scale(0.8) rotate(-18deg);
+}
+
+.themeIconMoon {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+body[data-theme="light"] .themeIconSun {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+body[data-theme="light"] .themeIconMoon {
+  opacity: 0;
+  transform: scale(0.8) rotate(18deg);
 }
 
 .section {
@@ -79,7 +202,7 @@ red {
 .nav {
   position: relative;
   display: flex;
-  background: #1e293b;
+  background: var(--nav-bg);
   border-radius: 12px;
   padding: 4px;
 }
@@ -141,7 +264,7 @@ red {
 /* ===== 5. FORM ELEMENTS (INPUTS & BUTTONS) ===== */
 label {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--muted-text);
 }
 
 textarea,
@@ -149,11 +272,16 @@ input {
   width: 100%;
   padding: 10px;
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: #1e293b;
-  color: #e2e8f0;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--page-text);
   font-size: 0.85rem;
   outline: none;
+}
+
+textarea::placeholder,
+input::placeholder {
+  color: var(--muted-text);
 }
 
 textarea {
@@ -185,8 +313,8 @@ button:hover {
   max-height: 120px;
   overflow-y: auto; /* Internal scrolling allowed here */
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: #1e293b;
+  border: 1px solid var(--list-border);
+  background: var(--list-bg);
   display: none;
 }
 
@@ -197,9 +325,9 @@ button:hover {
 .timezoneOption {
   padding: 10px 12px;
   font-size: 0.85rem;
-  color: #e2e8f0;
+  color: var(--page-text);
   cursor: pointer;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid var(--option-border);
 }
 
 .timezoneOption:hover,
@@ -211,8 +339,8 @@ button:hover {
 .timezoneEmpty {
   padding: 10px 12px;
   font-size: 0.85rem;
-  color: #e2e8f0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: var(--page-text);
+  border-bottom: 1px solid var(--option-border);
   user-select: none;
   -webkit-user-select: none;
 }
@@ -248,7 +376,7 @@ button:hover {
 .clearTextareaBtn {
   top: 8px;
   right: 8px;
-  background: rgba(255,255,255,0.08);
+  background: var(--icon-button-bg);
 }
 
 .timezoneInputWrap input:not(:placeholder-shown) + .clearTimezoneBtn,
@@ -260,7 +388,7 @@ button:hover {
 .trashIcon {
   width: 14px;
   height: 14px;
-  fill: #94a3b8;
+  fill: var(--muted-text);
   transition: fill 0.15s ease, transform 0.15s ease;
 }
 
@@ -270,10 +398,10 @@ button:hover {
   padding: 10px;
   border-radius: 10px;
   font-size: 0.85rem;
-  background: rgba(34,197,94,0.08);
-  border: 1px solid rgba(34,197,94,0.25);
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
   text-align: center;
-  color: #22c55e;
+  color: var(--success-text);
 }
 
 .infoIconWrapper {
@@ -291,8 +419,8 @@ button:hover {
   top: 140%;      /* switch from bottom -> top */
   left: 0;
 
-  background: #222;
-  color: #fff;
+  background: var(--tooltip-bg);
+  color: var(--tooltip-text);
   padding: 8px 10px;
   border-radius: 6px;
 
@@ -330,7 +458,7 @@ button:hover {
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-bottom-color: #222;
+  border-bottom-color: var(--tooltip-bg);
   opacity: 0;
   transition: opacity 0.2s ease;
 }
@@ -348,9 +476,9 @@ button:hover {
   gap: 14px;
   padding: 12px 14px;
   border-radius: 14px;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+  background: var(--toggle-bg);
+  border: 1px solid var(--toggle-border);
+  box-shadow: inset 0 1px 0 var(--toggle-shadow);
 }
 
 .toggleError {
@@ -373,14 +501,14 @@ button:hover {
 .toggleLabel {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: var(--strong-text);
 }
 
 .toggleSubtext {
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #94a3b8;
+  color: var(--muted-text);
   transition: color 0.2s ease;
 }
 

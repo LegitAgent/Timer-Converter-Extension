@@ -2,7 +2,7 @@ import { DOM } from "./dom.js";
 import { storageLocal, storageSession } from "./storage.js";
 import { savePopupState, restoreState } from "./manageState.js";
 import { applyTimezoneUI, updateCopyPasteClearButton, clearCopyPasteInput,
-         convertTime, clearTimezonePicker, setupExtensionToggle, clearTimeInput } from "./ui.js";
+         convertTime, clearTimezonePicker, setupExtensionToggle, clearTimeInput, setupThemeToggle, applyPopupTheme } from "./ui.js";
 import { getLocationWithFallback, getIntlFallbackTimezone, fetchTimezone, fetchTimezoneList } from "./api.js";
 import { initCustomDropdowns } from "./timezonePicker.js";
 import { setUpTabs } from "./tabs.js";
@@ -112,6 +112,7 @@ chrome.windows.onRemoved.addListener((closedId) => {
  */
 async function init() {
     setUpTabs();
+    applyPopupTheme(false);
 
     DOM.copyPasteInput.addEventListener("input", () => {
         updateCopyPasteClearButton();
@@ -143,6 +144,7 @@ async function init() {
     await handleTimezoneListRequest();
     await restoreState();
 
+    setupThemeToggle();
     setupExtensionToggle();
     
     DOM.openManualIcon.addEventListener("click", () => {

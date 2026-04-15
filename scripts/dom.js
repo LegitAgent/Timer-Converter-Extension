@@ -4,6 +4,8 @@
 export const DOM = {
     windowID: null,
 
+    themeToggle: document.getElementById("themeToggle"),
+
     locationButton: document.getElementById("getLocation"),
     timezoneOutput: document.getElementById("timezone"),
     tabs: document.querySelectorAll(".navBtn"),
