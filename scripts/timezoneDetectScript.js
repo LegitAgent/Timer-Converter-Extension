@@ -7,7 +7,30 @@
     const SKIP_SELECTOR = "input, textarea, script, style, [contenteditable='true']";
     const TIME_PATTERN = String.raw`(?:\d{1,2}:\d{2}|\d{3,4}|\d{1,2})`;
     const AMPM_PATTERN = String.raw`(?:A\.?M\.?|P\.?M\.?)`;
-    const CASE_SENSITIVE_TIMEZONES = new Set(["ART"]);
+    const CASE_SENSITIVE_TIMEZONES = new Set([
+        "AT",
+        "ACT",
+        "ART",
+        "AST",
+        "CAT",
+        "EAT",
+        "GET",
+        "PET",
+        "WAT",
+        "WET"
+    ]);
+    const CONTEXT_SENSITIVE_TIMEZONES = new Set([
+        "AT",
+        "ACT",
+        "ART",
+        "AST",
+        "CAT",
+        "EAT",
+        "GET",
+        "PET",
+        "WAT",
+        "WET"
+    ]);
 
     let timezoneOffsets = null;
     let matchRegex = null;
@@ -35,49 +58,57 @@
         style.id = STYLE_ID;
         style.textContent = `
             .tz-highlight {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.45em;
-                margin: 0 0.08em;
-                padding: 0.14em 0.38em 0.14em 0.44em;
-                border-radius: 999px;
-                background: linear-gradient(135deg, rgba(250, 204, 21, 0.18), rgba(251, 191, 36, 0.08));
-                box-shadow:
-                    inset 0 0 0 1px rgba(217, 119, 6, 0.2),
-                    0 1px 2px rgba(15, 23, 42, 0.08);
-                vertical-align: baseline;
-                line-height: 1.2;
+                display: inline;
+                margin: 0;
+                padding: 0;
+                border: 0;
+                border-radius: 0;
+                background: rgba(255, 230, 150, 0.4);
+                box-shadow: none;
+                font: inherit;
+                color: inherit;
             }
 
             .tz-source {
-                font-weight: 700;
+                font-weight: inherit;
                 color: inherit;
-                letter-spacing: 0.01em;
+                letter-spacing: 0;
+            }
+
+            .tz-divider {
+                display: inline;
+                margin: 0 0.16em 0 0.3em;
+                padding: 0;
+                background: transparent;
+                color: #475569;
+                font-size: 1em;
+                font-weight: inherit;
             }
 
             .tz-badge {
-                font-size: 0.72em;
-                font-weight: 700;
-                color: #f8fafc;
-                background: linear-gradient(135deg, #0f172a, #1e293b);
-                padding: 0.2em 0.62em;
-                border-radius: 999px;
+                display: inline;
+                padding: 0;
+                border-radius: 0;
+                background: transparent;
+                color: #334155;
                 white-space: nowrap;
-                display: inline-block;
-                vertical-align: middle;
-                box-shadow:
-                    inset 0 0 0 1px rgba(148, 163, 184, 0.18),
-                    0 2px 6px rgba(15, 23, 42, 0.18);
+                vertical-align: baseline;
+                font-size: 1em;
+                box-shadow: none;
             }
 
-            .tz-badge::before {
-                content: "Local";
-                margin-right: 0.45em;
-                color: rgba(226, 232, 240, 0.72);
-                font-size: 0.88em;
+            .tz-badge-label {
+                color: inherit;
+                font-size: 1em;
+                font-weight: inherit;
+                text-transform: none;
+                letter-spacing: 0;
+            }
+
+            .tz-badge-value {
                 font-weight: 600;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
+                letter-spacing: 0;
+                color: #0f172a;
             }
         `;
 
@@ -237,6 +268,17 @@
             return true;
         }
 
+        // Ambiguous timezone tokens that are also normal words/abbreviations
+        // need a more explicit time context. This prevents matches like "2 AT"
+        // while still allowing "2 PM AT" or "2:00 AT".
+        if (
+            CONTEXT_SENSITIVE_TIMEZONES.has(rawTimezone.toUpperCase()) &&
+            !time.includes(":") &&
+            !ampm
+        ) {
+            return true;
+        }
+
         return false;
     }
 
@@ -297,9 +339,29 @@
         source.textContent = matchText;
         wrapper.append(source);
 
+        const divider = document.createElement("span");
+        divider.className = "tz-divider";
+        divider.textContent = "(";
+        wrapper.append(divider);
+
         const badge = document.createElement("span");
         badge.className = "tz-badge";
-        badge.textContent = convertedTime;
+
+        const badgeLabel = document.createElement("span");
+        badgeLabel.className = "tz-badge-label";
+        badgeLabel.textContent = "local ";
+        badge.append(badgeLabel);
+
+        const badgeValue = document.createElement("span");
+        badgeValue.className = "tz-badge-value";
+        badgeValue.textContent = convertedTime;
+        badge.append(badgeValue);
+
+        const badgeClose = document.createElement("span");
+        badgeClose.className = "tz-badge-label";
+        badgeClose.textContent = ")";
+        badge.append(badgeClose);
+
         wrapper.append(badge);
 
         return wrapper;
