@@ -13,19 +13,29 @@ export async function savePopupState() {
         await storageLocal.set({
             popupState: {
                 windowID: DOM.windowID,
+
                 tab: activeTab,
                 lightModeEnabled: document.body.dataset.theme === "light",
+
                 cachedCopyPasteInput: DOM.copyPasteInput.value,
                 timezoneOut: DOM.timezoneOutput.textContent,
+
                 cachedSourceZoneInput: DOM.sourceZoneInput.value,
                 cachedSourceZoneValue: DOM.sourceZoneValue.value,
+
                 cachedTargetZoneInput: DOM.targetZoneInput.value,
                 cachedTargetZoneValue: DOM.targetZoneValue.value,
+
                 cachedInputTimeConvert: DOM.inputTimeConvert.value,
+
                 cachedConvertOutput: DOM.convertOutput.innerHTML,
                 cachedConvertOutputCopyable: DOM.convertOutput.classList.contains("copyableResult"),
+                cachedConvertOutputClass: DOM.convertOutput.className,
+
                 cachedCopyPasteOutput: DOM.copyPasteOutput.innerHTML,
                 cachedCopyPasteOutputCopyable: DOM.copyPasteOutput.classList.contains("copyableResult"),
+                cachedCopyPasteOutputClass: DOM.copyPasteOutput.className,
+
                 extensionEnabled: DOM.extensionToggle?.checked ?? false,
             }
         });
@@ -94,11 +104,18 @@ export async function restoreState() {
         if (popupState.cachedConvertOutput != null) {
             DOM.convertOutput.innerHTML = popupState.cachedConvertOutput;
         }
+
+        if (popupState.cachedConvertOutputClass != null) {
+            DOM.convertOutput.className = popupState.cachedConvertOutputClass;
+        }
         DOM.convertOutput.classList.toggle("copyableResult", Boolean(popupState.cachedConvertOutputCopyable));
         updateCopyPasteClearButton();
 
         if (popupState.cachedCopyPasteOutput != null) {
             DOM.copyPasteOutput.innerHTML = popupState.cachedCopyPasteOutput;
+        }
+        if (popupState.cachedCopyPasteOutputClass != null) {
+            DOM.copyPasteOutput.className = popupState.cachedCopyPasteOutputClass;
         }
         DOM.copyPasteOutput.classList.toggle("copyableResult", Boolean(popupState.cachedCopyPasteOutputCopyable));
 

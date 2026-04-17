@@ -3,7 +3,8 @@ import { savePopupState } from "./manageState.js";
 import { storageLocal } from "./storage.js";
 import { timezoneOffsets } from "./timezoneOffsets.js";
 import { extractTimeParts, getHoursAndMinutes, convertToLocal } from "./timeConversion.js";
-import { renderCopyableResult, resetCopyableResult } from "./resultCopy.js";
+import { resetCopyableResult } from "./resultCopy.js";
+import { errorMessageOutput, successMessageOutput } from "./ui.js";
 
 /**
  * sanitizes user input by removing control characters, such as /, <, >, and etc.
@@ -116,21 +117,20 @@ function isValid(map) {
 /**
  * checks which error occurred.
  * @param {Number} idx the index error message
+ * @returns
  */
 function errorMessage(idx) {
     resetCopyableResult(DOM.copyPasteOutput);
 
     if (idx == 1) {
-        DOM.copyPasteOutput.innerHTML = "<red><b>Invalid time or invalid time format.</b></red>";
+        return "Invalid time or invalid time format.";
     } else if (idx == 2) {
-        DOM.copyPasteOutput.innerHTML = "<red><b>Invalid AM/PM format.</b></red>";
+        return "Invalid AM/PM format.";
     } else if (idx == 3) {
-        DOM.copyPasteOutput.innerHTML = "<red><b>Invalid time zone.</b></red>";
-    } else { // default
-        DOM.copyPasteOutput.innerHTML = "Error"
+        return "Invalid time zone.";
     }
 
-    return 1;
+    return "Error";
 }
 
 /**
@@ -139,10 +139,10 @@ function errorMessage(idx) {
  */
 export async function convertPastedTime() {
     const { timezone_now } = await storageLocal.get("timezone_now");
+    const outputEl = DOM.copyPasteOutput;
     if (!timezone_now) {
-        resetCopyableResult(DOM.copyPasteOutput);
-        DOM.copyPasteOutput.innerHTML = "<red>Get your time zone first!</red>";
-        savePopupState();
+        resetCopyableResult(outputEl);
+        errorMessageOutput(outputEl, "Get your time zone first!");
         return;
     }
     
@@ -154,30 +154,29 @@ export async function convertPastedTime() {
         let validMap = isStandard || isReverse;
 
         if (!validMap) {
-            resetCopyableResult(DOM.copyPasteOutput);
-            DOM.copyPasteOutput.innerHTML = "<red><b>Invalid format, use format:<br> (00:00) (AM/PM) (timezone) <br> or (timezone) (00:00) (AM/PM)</b></red>";
-            savePopupState();
+            resetCopyableResult(outputEl);
+            errorMessageOutput(outputEl, "Invalid format, use format:<br> (00:00) (AM/PM) (timezone) <br> or (timezone) (00:00) (AM/PM)");
             return false;
         }
 
         const validStandard = isValid(isStandard);
         const validReverse = isValid(isReverse);
-
         if (validStandard[0]) {
             validMap = isStandard;
             const convertedTime = convertToLocal(validMap, timezone_now);
-            renderCopyableResult(DOM.copyPasteOutput, convertedTime);
+            successMessageOutput(outputEl, convertedTime);
         } else if (validReverse[0]) {
             validMap = isReverse;
             const convertedTime = convertToLocal(validMap, timezone_now);
-            renderCopyableResult(DOM.copyPasteOutput, convertedTime);
+            successMessageOutput(outputEl, convertedTime);
         } else {
             const moreLikely = validStandard[1] > validReverse[1] ? validStandard[1] : validReverse[1];
-            errorMessage(moreLikely);
+            const error = errorMessage(moreLikely);
+            errorMessageOutput(outputEl, error);
         }
 
         savePopupState();
-        return 1;
+        return 0;
     } catch (error) {
         console.error(error);
     }

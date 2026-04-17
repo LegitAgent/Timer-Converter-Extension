@@ -4,7 +4,7 @@ import { sanitizeTimeInput } from "./copyPasteConverter.js";
 import { extractTimeParts, getHoursAndMinutes } from "./timeConversion.js";
 import { timezoneOffsets } from "./timezoneOffsets.js";
 import { storageLocal } from "./storage.js";
-import { renderCopyableResult, resetCopyableResult } from "./resultCopy.js";
+import { resetCopyableResult } from "./resultCopy.js";
 
 /**
  * edits the button div to have a "success" UI.
@@ -60,6 +60,55 @@ function isStandard(str) {
     };
 }
 
+/**
+ * prints the error message for a specified output field.
+ * @param {Element} inEl output element
+ * @param {string} text text that will displayed by the element
+ */
+export function errorMessageOutput(inEl, text) {
+    inEl.innerHTML = `<b>${text}</b>`;
+    inEl.classList.remove("convertOutput");
+    inEl.classList.add("convertOutputError");
+    console.log("error");
+    savePopupState();
+}
+
+/**
+ * prints the error message for a specified output field.
+ * @param {Element} inEl output element
+ * @param {string} text text that will displayed by the element
+ */
+export function successMessageOutput(inEl, text) {
+    if (!inEl) return;
+
+    inEl.innerHTML = `<b>${text}</b>`;
+    inEl.classList.remove("convertOutputError");
+    inEl.classList.add("convertOutput");
+
+    const textEl = document.createElement("span");
+    textEl.className = "copyResultText";
+    textEl.textContent = text;
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "copyResultBtn unselectable";
+    button.setAttribute("aria-label", "Copy converted time");
+    button.title = "Copy converted time";
+    button.dataset.copyValue = text;
+
+    const icon = document.createElement("img");
+    icon.src = "/images/copypaste.svg";
+    icon.alt = "";
+    icon.className = "copyResultIcon";
+
+    button.appendChild(icon);
+
+    inEl.innerHTML = "";
+    inEl.classList.add("copyableResult");
+    inEl.append(textEl, button);
+    savePopupState();
+}
+
 // limitation: if you convert time at exactly where DST is affected and you did not quit/restart the extension session, it will still presume DST and vice versa.
 // to limit free API calls ^^^^
 /**
@@ -68,11 +117,11 @@ function isStandard(str) {
  */
 export function convertTime() {
     try {
+        const outputEl = DOM.convertOutput;
         // ensure zones are selected
         if (!DOM.sourceZoneValue.value || !DOM.targetZoneValue.value) {
-            resetCopyableResult(DOM.convertOutput);
-            DOM.convertOutput.innerHTML = "<red><b>Please select both timezones.</b></red>";
-            savePopupState();
+            resetCopyableResult(outputEl);
+            errorMessageOutput(outputEl, "Please select both timezones.");
             return;
         }
 
@@ -84,18 +133,16 @@ export function convertTime() {
         let convertedTime = isStandard(sanitizedText);
 
         if (!convertedTime) {
-            resetCopyableResult(DOM.convertOutput);
-            DOM.convertOutput.innerHTML = "<red><b>Please enter a valid time. Format is: HH:MM AM/PM</b></red>";
-            savePopupState();
+            resetCopyableResult(outputEl);
+            errorMessageOutput(outputEl, "Please enter a valid time. Format is: HH:MM AM/PM");
             return;
         }
 
         const parsedTime = getHoursAndMinutes(convertedTime.time, convertedTime.ampm);
 
         if (!parsedTime) {
-            resetCopyableResult(DOM.convertOutput);
-            DOM.convertOutput.innerHTML = "<red><b>Please enter a valid time. Format is: HH:MM AM/PM</b></red>";
-            savePopupState();
+            resetCopyableResult(outputEl);
+            errorMessageOutput(outputEl, "Please enter a valid time. Format is: HH:MM AM/PM");
             return;
         }
 
@@ -138,13 +185,11 @@ export function convertTime() {
         }
 
         const resultText = `From: UTC${UTCDisplacementSource} to UTC${UTCDisplacementTarget}\n${h12}:${m} ${ampm}${dayLabels[dayShift] || ""}`;
-        renderCopyableResult(DOM.convertOutput, resultText);
-
-        savePopupState();
+        successMessageOutput(outputEl, resultText);
     } catch (err) {
         console.error("Conversion failed:", err);
-        resetCopyableResult(DOM.convertOutput);
-        DOM.convertOutput.innerHTML = "<red><b>Error parsing timezone data.</b></red>";
+        resetCopyableResult(outputEl);
+        errorMessageOutput(outputEl, "Error parsing timezone data.");
     }
 }
 

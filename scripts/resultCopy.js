@@ -1,36 +1,4 @@
 /**
- * renders a successful result with a copy button inside the output element.
- * @param {HTMLElement} outputEl result container
- * @param {string} convertedText converted text to display and copy
- * @returns {void}
- */
-export function renderCopyableResult(outputEl, convertedText) {
-    if (!outputEl) return;
-
-    const text = document.createElement("span");
-    text.className = "copyResultText";
-    text.textContent = convertedText;
-
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "copyResultBtn unselectable";
-    button.setAttribute("aria-label", "Copy converted time");
-    button.title = "Copy converted time";
-    button.dataset.copyValue = convertedText;
-
-    const icon = document.createElement("img");
-    icon.src = "/images/copypaste.svg";
-    icon.alt = "";
-    icon.className = "copyResultIcon";
-
-    button.appendChild(icon);
-
-    outputEl.innerHTML = "";
-    outputEl.classList.add("copyableResult");
-    outputEl.append(text, button);
-}
-
-/**
  * removes copy-button styling from an output element.
  * @param {HTMLElement} outputEl result container
  * @returns {void}
