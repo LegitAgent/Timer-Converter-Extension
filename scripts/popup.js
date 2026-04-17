@@ -7,6 +7,7 @@ import { getLocationWithFallback, getIntlFallbackTimezone, fetchTimezone, fetchT
 import { initCustomDropdowns } from "./timezonePicker.js";
 import { setUpTabs } from "./tabs.js";
 import { convertPastedTime } from "./copyPasteConverter.js";
+import { initializeCopyResult } from "./resultCopy.js";
 
 /**
  * gets the location of the user, and updates the text content of #timezone to the user's local time zone
@@ -19,7 +20,6 @@ async function handleLocationRequest() {
     DOM.locationButton.classList.add("loading");
     DOM.locationButton.textContent = "Detecting...";
     DOM.timezoneOutput.classList.remove("success");
-    DOM.timezoneOutput.textContent = "";
 
     try {
         const location = await getLocationWithFallback();
@@ -113,6 +113,8 @@ chrome.windows.onRemoved.addListener((closedId) => {
 async function init() {
     setUpTabs();
     applyPopupTheme(false);
+    initializeCopyResult(DOM.copyPasteOutput);
+    initializeCopyResult(DOM.convertOutput);
 
     DOM.copyPasteInput.addEventListener("input", () => {
         updateCopyPasteClearButton();

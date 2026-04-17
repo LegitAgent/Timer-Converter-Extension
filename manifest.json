@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "TimeWizard",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "description": "Paste event times, automatically detect and convert timezones or convert between any two timezones manually.",
     "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxL8VwsHrGvsuxgIh9+iSWAmzWRg42Q8uP4J70cFDdyrzlDBjdox13fg/KN7GqM3DBFIG/1s4UJefjqmj0QNRLjcpmrBfBmS7qSpWLKZRCF1FGfbWut4d+5oJdSzz8/gFZsQDs82jqtjRuIsudzwtTQ+zCwFs0rE/WYowuZWCGpPRjLFbhqVIGqsv5vb8ix1kijZf+dGaYxCVrcwSDA/9y1+3NIT6qfIfoZQTQYsU8myQP84twag7ox5CV/CYUrgGDjounCZJjbbtVN4FxCP+pX+cZ36S/a9qTZqn+vaMwrvRMXjvrq0g93XjuhRVohrAyYrqDYIMSGmSDnDZmGGH9QIDAQAB",
     "icons": {

@@ -1,8 +1,10 @@
 import { DOM } from "./dom.js";
 import { savePopupState } from "./manageState.js";
-import { getHoursAndMinutes, extractTimeParts, sanitizeTimeInput } from "./copyPasteConverter.js";
+import { sanitizeTimeInput } from "./copyPasteConverter.js";
+import { extractTimeParts, getHoursAndMinutes } from "./timeConversion.js";
 import { timezoneOffsets } from "./timezoneOffsets.js";
 import { storageLocal } from "./storage.js";
+import { renderCopyableResult, resetCopyableResult } from "./resultCopy.js";
 
 /**
  * edits the button div to have a "success" UI.
@@ -68,7 +70,9 @@ export function convertTime() {
     try {
         // ensure zones are selected
         if (!DOM.sourceZoneValue.value || !DOM.targetZoneValue.value) {
+            resetCopyableResult(DOM.convertOutput);
             DOM.convertOutput.innerHTML = "<red><b>Please select both timezones.</b></red>";
+            savePopupState();
             return;
         }
 
@@ -80,14 +84,18 @@ export function convertTime() {
         let convertedTime = isStandard(sanitizedText);
 
         if (!convertedTime) {
+            resetCopyableResult(DOM.convertOutput);
             DOM.convertOutput.innerHTML = "<red><b>Please enter a valid time. Format is: HH:MM AM/PM</b></red>";
+            savePopupState();
             return;
         }
 
         const parsedTime = getHoursAndMinutes(convertedTime.time, convertedTime.ampm);
 
         if (!parsedTime) {
+            resetCopyableResult(DOM.convertOutput);
             DOM.convertOutput.innerHTML = "<red><b>Please enter a valid time. Format is: HH:MM AM/PM</b></red>";
+            savePopupState();
             return;
         }
 
@@ -129,11 +137,13 @@ export function convertTime() {
             UTCDisplacementTarget = "+" + UTCDisplacementTarget;
         }
 
-        DOM.convertOutput.innerHTML = `From: UTC${UTCDisplacementSource} to UTC${UTCDisplacementTarget} <br> ${h12}:${m} ${ampm}${dayLabels[dayShift] || ""}`;
+        const resultText = `From: UTC${UTCDisplacementSource} to UTC${UTCDisplacementTarget}\n${h12}:${m} ${ampm}${dayLabels[dayShift] || ""}`;
+        renderCopyableResult(DOM.convertOutput, resultText);
 
         savePopupState();
     } catch (err) {
         console.error("Conversion failed:", err);
+        resetCopyableResult(DOM.convertOutput);
         DOM.convertOutput.innerHTML = "<red><b>Error parsing timezone data.</b></red>";
     }
 }

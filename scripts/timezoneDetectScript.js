@@ -19,19 +19,7 @@
         "WAT",
         "WET"
     ]);
-    const CONTEXT_SENSITIVE_TIMEZONES = new Set([
-        "AT",
-        "ACT",
-        "ART",
-        "AST",
-        "CAT",
-        "EAT",
-        "GET",
-        "PET",
-        "WAT",
-        "WET"
-    ]);
-
+    
     let timezoneOffsets = null;
     let matchRegex = null;
     let isEnabled = false;
@@ -77,38 +65,39 @@
 
             .tz-divider {
                 display: inline;
-                margin: 0 0.16em 0 0.3em;
+                margin: 0 0.06em 0 0.18em;
                 padding: 0;
                 background: transparent;
-                color: #475569;
+                color: #64748b;
                 font-size: 1em;
                 font-weight: inherit;
             }
 
             .tz-badge {
                 display: inline;
-                padding: 0;
-                border-radius: 0;
-                background: transparent;
-                color: #334155;
+                padding: 0.08em 0.42em;
+                border-radius: 999px;
+                background: #111827;
+                color: #ffffff;
                 white-space: nowrap;
                 vertical-align: baseline;
-                font-size: 1em;
-                box-shadow: none;
+                font-size: 0.95em;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+                font-style: normal;
             }
 
             .tz-badge-label {
                 color: inherit;
-                font-size: 1em;
+                font-size: 0.95em;
                 font-weight: inherit;
                 text-transform: none;
                 letter-spacing: 0;
             }
 
             .tz-badge-value {
-                font-weight: 600;
+                font-weight: inherit;
                 letter-spacing: 0;
-                color: #0f172a;
+                color: inherit;
             }
         `;
 
@@ -268,11 +257,9 @@
             return true;
         }
 
-        // Ambiguous timezone tokens that are also normal words/abbreviations
-        // need a more explicit time context. This prevents matches like "2 AT"
-        // while still allowing "2 PM AT" or "2:00 AT".
+        // only allowing like "2 PM AT" or "2:00 AT" for timezones that are also common English words
         if (
-            CONTEXT_SENSITIVE_TIMEZONES.has(rawTimezone.toUpperCase()) &&
+            CASE_SENSITIVE_TIMEZONES.has(rawTimezone.toUpperCase()) &&
             !time.includes(":") &&
             !ampm
         ) {

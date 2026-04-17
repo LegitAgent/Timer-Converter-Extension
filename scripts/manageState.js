@@ -23,7 +23,9 @@ export async function savePopupState() {
                 cachedTargetZoneValue: DOM.targetZoneValue.value,
                 cachedInputTimeConvert: DOM.inputTimeConvert.value,
                 cachedConvertOutput: DOM.convertOutput.innerHTML,
+                cachedConvertOutputCopyable: DOM.convertOutput.classList.contains("copyableResult"),
                 cachedCopyPasteOutput: DOM.copyPasteOutput.innerHTML,
+                cachedCopyPasteOutputCopyable: DOM.copyPasteOutput.classList.contains("copyableResult"),
                 extensionEnabled: DOM.extensionToggle?.checked ?? false,
             }
         });
@@ -92,11 +94,13 @@ export async function restoreState() {
         if (popupState.cachedConvertOutput != null) {
             DOM.convertOutput.innerHTML = popupState.cachedConvertOutput;
         }
+        DOM.convertOutput.classList.toggle("copyableResult", Boolean(popupState.cachedConvertOutputCopyable));
         updateCopyPasteClearButton();
 
         if (popupState.cachedCopyPasteOutput != null) {
             DOM.copyPasteOutput.innerHTML = popupState.cachedCopyPasteOutput;
         }
+        DOM.copyPasteOutput.classList.toggle("copyableResult", Boolean(popupState.cachedCopyPasteOutputCopyable));
 
         if (popupState.tab != null) {
             const savedTabBtn = document.querySelector(`.navBtn[data-tab="${popupState.tab}"]`);

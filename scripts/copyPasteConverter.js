@@ -3,6 +3,7 @@ import { savePopupState } from "./manageState.js";
 import { storageLocal } from "./storage.js";
 import { timezoneOffsets } from "./timezoneOffsets.js";
 import { extractTimeParts, getHoursAndMinutes, convertToLocal } from "./timeConversion.js";
+import { renderCopyableResult, resetCopyableResult } from "./resultCopy.js";
 
 /**
  * sanitizes user input by removing control characters, such as /, <, >, and etc.
@@ -19,8 +20,6 @@ export function sanitizeTimeInput(input) {
     clean = clean.trim().slice(0, 100);
     return clean;
 }
-
-export { extractTimeParts, getHoursAndMinutes, convertToLocal } from "./timeConversion.js";
 
 // STANDARD FORMAT: TIME [AM/PM] TIMEZONE
 /**
@@ -119,6 +118,8 @@ function isValid(map) {
  * @param {Number} idx the index error message
  */
 function errorMessage(idx) {
+    resetCopyableResult(DOM.copyPasteOutput);
+
     if (idx == 1) {
         DOM.copyPasteOutput.innerHTML = "<red><b>Invalid time or invalid time format.</b></red>";
     } else if (idx == 2) {
@@ -139,6 +140,7 @@ function errorMessage(idx) {
 export async function convertPastedTime() {
     const { timezone_now } = await storageLocal.get("timezone_now");
     if (!timezone_now) {
+        resetCopyableResult(DOM.copyPasteOutput);
         DOM.copyPasteOutput.innerHTML = "<red>Get your time zone first!</red>";
         savePopupState();
         return;
@@ -152,6 +154,7 @@ export async function convertPastedTime() {
         let validMap = isStandard || isReverse;
 
         if (!validMap) {
+            resetCopyableResult(DOM.copyPasteOutput);
             DOM.copyPasteOutput.innerHTML = "<red><b>Invalid format, use format:<br> (00:00) (AM/PM) (timezone) <br> or (timezone) (00:00) (AM/PM)</b></red>";
             savePopupState();
             return false;
@@ -163,11 +166,11 @@ export async function convertPastedTime() {
         if (validStandard[0]) {
             validMap = isStandard;
             const convertedTime = convertToLocal(validMap, timezone_now);
-            DOM.copyPasteOutput.textContent = convertedTime;
+            renderCopyableResult(DOM.copyPasteOutput, convertedTime);
         } else if (validReverse[0]) {
             validMap = isReverse;
             const convertedTime = convertToLocal(validMap, timezone_now);
-            DOM.copyPasteOutput.textContent = convertedTime;
+            renderCopyableResult(DOM.copyPasteOutput, convertedTime);
         } else {
             const moreLikely = validStandard[1] > validReverse[1] ? validStandard[1] : validReverse[1];
             errorMessage(moreLikely);
@@ -179,3 +182,4 @@ export async function convertPastedTime() {
         console.error(error);
     }
 }
+
