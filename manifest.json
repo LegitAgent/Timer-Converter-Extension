@@ -40,13 +40,5 @@
             ],
             "run_at": "document_idle"
         }
-    ],
-    "commands": {
-        "_execute_action": {
-            "suggested_key": {
-                "default": "Ctrl+B",
-                "mac": "Command+B"
-            }
-        }
-    } 
+    ]
 }
