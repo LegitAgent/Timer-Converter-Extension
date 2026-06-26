@@ -33,8 +33,48 @@ export const timezoneOffsets = {
   /****************
    * UTC / GMT BASE
    ****************/
-  "GMT": 0, // Greenwich Mean Time
   "WT": 0, // Western Sahara Standard Time / generic Western Time label
+  "GMT": 0, // Greenwich Mean Time
+  "GMT-12": -12,
+  "GMT-11": -11,
+  "GMT-10": -10,
+  "GMT-9:30": -9.5,
+  "GMT-9": -9,
+  "GMT-8": -8,
+  "GMT-7": -7,
+  "GMT-6": -6,
+  "GMT-5": -5,
+  "GMT-4": -4,
+  "GMT-3:30": -3.5,
+  "GMT-3": -3,
+  "GMT-2:30": -2.5,
+  "GMT-2": -2,
+  "GMT-1": -1,
+  "GMT-0": 0,
+  "GMT+0": 0,
+  "GMT+1": 1,
+  "GMT+2": 2,
+  "GMT+3": 3,
+  "GMT+3:30": 3.5,
+  "GMT+4": 4,
+  "GMT+4:30": 4.5,
+  "GMT+5": 5,
+  "GMT+5:30": 5.5,
+  "GMT+5:45": 5.75,
+  "GMT+6": 6,
+  "GMT+6:30": 6.5,
+  "GMT+7": 7,
+  "GMT+8": 8,
+  "GMT+8:45": 8.75,
+  "GMT+9": 9,
+  "GMT+9:30": 9.5,
+  "GMT+10": 10,
+  "GMT+10:30": 10.5,
+  "GMT+11": 11,
+  "GMT+12": 12,
+  "GMT+12:45": 12.75,
+  "GMT+13": 13,
+  "GMT+14": 14,
 
   /****************************
    * EXPLICIT UTC OFFSET TOKENS
