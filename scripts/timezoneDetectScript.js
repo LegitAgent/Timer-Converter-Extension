@@ -76,9 +76,9 @@
         //         create capture group, named as <full>
         //         name the group time and use TIME_PATTERN regex, similar with ampm and tz
         //         match must not be immediately followed by a letter, digit, or underscore
-        // e.g., abcd10AMPSTabcd is invalid since it is stuck between a word, it must be a word in itself
+        // e.g., abcd10AMPST (*)abcd is invalid since it is stuck between a word, it must be a word in itself
         return new RegExp(
-            String.raw`(?<![A-Za-z0-9_])(?<full>(?<time>${TIME_PATTERN})\s*(?<ampm>${AMPM_PATTERN})?\s*(?<tz>${timezonePattern}))(?![A-Za-z0-9_])`,
+            String.raw`(?<![A-Za-z0-9_])(?<full>(?<time>${TIME_PATTERN})\s*(?<ampm>${AMPM_PATTERN})?\s*(?<tz>${timezonePattern}))(?!.)`,
             "gi"
         );
     }
