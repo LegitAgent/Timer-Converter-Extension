@@ -53,12 +53,13 @@ async function syncTabState(tabId) {
         return;
     }
 
-    const { popupState } = await storageLocal.get("popupState");
+    const { popupState, timezone_now } = await storageLocal.get(["popupState", "timezone_now"]);
     const enabled = Boolean(popupState?.extensionEnabled);
 
     const offsetsSent = await sendTabMessageIfReady(tabId, {
         type: "TIME_EXTENSION_SET_OFFSETS",
-        offsets: timezoneOffsets
+        offsets: timezoneOffsets,
+        localTimezone: timezone_now || null
     });
 
     if (!offsetsSent) {
@@ -160,13 +161,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
     fetch(url, { signal: controller.signal })
         .then(res => {
-            clearTimeout(timeoutId);
             if (!res.ok) throw new Error(`Server Error: ${res.status}`);
             return res.json();
         })
         .then(data => sendResponse({ success: true, data }))
         .catch(err => {
-            clearTimeout(timeoutId);
             console.error("Fetch failed: ", err);
             sendResponse({
                 success: false,
@@ -174,7 +173,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
                     ? "Request timed out before the timezone service responded."
                     : err.message
             });
-        });
+        })
+        .finally(() => clearTimeout(timeoutId));
 
     return true;
 });

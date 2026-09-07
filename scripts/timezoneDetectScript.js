@@ -4,7 +4,7 @@
     window.__timeExtensionScannerLoaded = true;
 
     const STYLE_ID = "time-extension-inline-style";
-    const SKIP_SELECTOR = "input, textarea, script, style, [contenteditable='true']";
+    const SKIP_SELECTOR = "input, textarea, select, script, style, noscript, svg, math, [contenteditable]:not([contenteditable='false'])";
     const TIME_PATTERN = String.raw`(?:\d{1,2}:\d{2}|\d{3,4}|\d{1,2})`;
     const AMPM_PATTERN = String.raw`(?:A\.?M\.?|P\.?M\.?)`;
     const CASE_SENSITIVE_TIMEZONES = new Set([
@@ -25,6 +25,10 @@
     let isEnabled = false;
     let observer = null;
     let scanTimer = null;
+    let scanGeneration = 0;
+    let settingsKey = null;
+    let conversionError = null;
+    const pendingRoots = new Set();
 
     /**
      * prevents the string from being interpreted as a regex by itself
@@ -127,36 +131,9 @@
         //         match must not be immediately followed by a letter, digit, or underscore
         // e.g., abcd10AMPST (*)abcd is invalid since it is stuck between a word, it must be a word in itself
         return new RegExp(
-            String.raw`(?<![A-Za-z0-9_])(?<full>(?<time>${TIME_PATTERN})\s*(?<ampm>${AMPM_PATTERN})?\s*(?<tz>${timezonePattern}))(?!.)`,
+            String.raw`(?<![A-Za-z0-9_:])(?<full>(?<time>${TIME_PATTERN})\s*(?<ampm>${AMPM_PATTERN})?\s*(?<tz>${timezonePattern}))(?![A-Za-z0-9_]|[+-]\d|:\d)`,
             "gi"
         );
-    }
-
-    /**
-     * checks whether or not a specific node is supposed to be skipped by the scanner
-     * @param {Node} node a node element in the DOM
-     * @returns {Boolean} whether to skip the node or not
-     */
-    function shouldSkipTextNode(node) {
-        if (!node || node.nodeType !== Node.TEXT_NODE) return true; // skip non-text nodes
-        if (!node.nodeValue || !node.nodeValue.trim()) return true; // skip empty text nodes
-
-        const parent = node.parentElement;
-        if (!parent) return true; // no parent = not normal html, detached from the DOM
-
-        // skip elements that are editable
-        if (parent.closest(SKIP_SELECTOR)) return true;
-        if (parent.closest("[data-tz-processed='true']")) return true; // skip already marked elements
-
-        if (parent.isContentEditable || parent.closest("[contenteditable]:not([contenteditable='false'])")) {
-            return true;
-        }
-
-        // skip elements that are not visible
-        const styles = window.getComputedStyle(parent);
-        if (styles.display === "none" || styles.visibility === "hidden") return true;
-
-        return false;
     }
 
     /**
@@ -326,6 +303,10 @@
         source.textContent = matchText;
         wrapper.append(source);
 
+        // Split expressions retain a highlight in each original element, with
+        // just one conversion badge after the last part.
+        if (!convertedTime) return wrapper;
+
         const divider = document.createElement("span");
         divider.className = "tz-divider";
         divider.textContent = "(";
@@ -366,7 +347,6 @@
 
         for (const match of matches) {
             if (match.start < cursor) continue; // skip if already handled
-            if (!match.convertedTime) continue;
 
             // preserve the plain text before this match, if any
             if (match.start > cursor) {
@@ -386,69 +366,59 @@
         node.parentNode?.replaceChild(fragment, node);
     }
 
-    /**
-     * creates a tree walker to navigate the DOM for eligible nodes to be scanned
-     * @param {Node} root root node for the subtree
-     * @returns {TreeWalker} a TreeWalker filtered by shouldSkipTextNode
-     */
-    function createWalker(root) {
-        return document.createTreeWalker(
-            root,
-            NodeFilter.SHOW_TEXT, // nodes that have text
-            {
-                acceptNode(node) {
-                    return shouldSkipTextNode(node)
-                        ? NodeFilter.FILTER_REJECT
-                        : NodeFilter.FILTER_ACCEPT;
-                }
-            }
-        );
+    function isInline(element) {
+        return ["inline", "contents"].includes(window.getComputedStyle(element).display);
     }
 
-    /**
-     * collects all nodes from the root DOM
-     * @param {Node} root the root node of the DOM
-     * @returns {Array} collected text nodes from the root node
-     */
-    function collectNodes(root) {
-        const nodes = [];
+    function isExcluded(element) {
+        const style = window.getComputedStyle(element);
+        return element.matches(SKIP_SELECTOR + ", [data-tz-processed='true']") ||
+            style.display === "none" || ["hidden", "collapse"].includes(style.visibility);
+    }
 
-        if (!root) return nodes;
-
-        // if root is text by itself, needed because of mutation observer rescans
-        if (root.nodeType === Node.TEXT_NODE) {
-            if (!shouldSkipTextNode(root)) {
-                nodes.push(root);
+    // Preserve whitespace and offsets across inline formatting, but never join
+    // separate blocks or bridge excluded/hidden content.
+    function collectTextRuns(root) {
+        // A queued subtree may sit inside a hidden or editable ancestor.
+        for (let parent = root.parentElement; parent; parent = parent.parentElement) {
+            if (isExcluded(parent)) return [];
+        }
+        const runs = [];
+        let run = { text: "", parts: [] };
+        const flush = () => {
+            if (run.parts.length) runs.push(run);
+            run = { text: "", parts: [] };
+        };
+        function visit(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                if (!node.nodeValue) return;
+                // Whitespace-only nodes are essential between inline elements.
+                run.parts.push({ node, text: node.nodeValue, start: run.text.length });
+                run.text += node.nodeValue;
+                return;
             }
-            return nodes;
+            if (node.nodeType !== Node.ELEMENT_NODE) return;
+            if (isExcluded(node) || ["BR", "HR", "IMG", "IFRAME"].includes(node.tagName)) {
+                flush();
+                return;
+            }
+            const boundary = !isInline(node);
+            if (boundary) flush();
+            for (const child of node.childNodes) visit(child);
+            if (boundary) flush();
         }
-
-        // only supported node types
-        if (!(root instanceof Element) && !(root instanceof Document) && !(root instanceof DocumentFragment)) {
-            return nodes;
-        }
-
-        // if already inside a skipped subtree
-        if (root instanceof Element && root.closest(SKIP_SELECTOR)) return nodes;
-        if (root instanceof Element && root.closest("[data-tz-processed='true']")) return nodes;
-
-        const walker = createWalker(root);
-        let current;
-
-        // traverse nodes in the DOM
-        while ((current = walker.nextNode())) {
-            nodes.push(current);
-        }
-
-        return nodes;
+        visit(root);
+        flush();
+        return runs;
     }
 
     /**
      * deduplicates detected matches and requests converted times from the background script
-     * @param {Map<Node, Array>} matchMap a map of matched formats for scanning
+     * @param {Map<Object, Array>} matchMap matches grouped by inline text run
      * @returns {Promise<Map<string, string>>} a map of converted times as values and match keys as keys
      */
     async function requestConversions(matchMap) {
+        const generation = scanGeneration;
         const uniqueItems = [];
         const seenKeys = new Set();
 
@@ -473,11 +443,14 @@
                 action: "convertDetectedTimes",
                 items: uniqueItems
             });
+            if (generation !== scanGeneration || !isEnabled) return new Map();
 
             const results = new Map();
             if (!response?.success || !Array.isArray(response.results)) {
+                conversionError = response?.error || "Unable to convert detected times. Try turning the scanner off and on.";
                 return results;
             }
+            conversionError = null;
 
             // parse conversions into a map
             response.results.forEach((item) => {
@@ -486,6 +459,8 @@
 
             return results;
         } catch (error) {
+            if (generation !== scanGeneration || !isEnabled) return new Map();
+            conversionError = "Unable to reach the extension. Refresh this page and try again.";
             console.error("Failed to convert detected times.", error);
             return new Map();
         }
@@ -501,16 +476,18 @@
         if (!isEnabled || !document.body || !matchRegex) return;
 
         injectStyles();
+        // Observe even when this page has no matches yet or conversion fails.
+        initObserver();
+        const generation = scanGeneration;
 
-        const nodes = collectNodes(root);
-        if (!nodes.length) return;
+        const runs = collectTextRuns(root);
 
         // get all standard format matches in all collected text nodes
         const matchMap = new Map();
-        for (const node of nodes) {
-            const matches = findTimeMatches(node.nodeValue || "");
+        for (const run of runs) {
+            const matches = findTimeMatches(run.text);
             if (matches.length) {
-                matchMap.set(node, matches);
+                matchMap.set(run, matches);
             }
         }
 
@@ -518,35 +495,50 @@
 
         // convert the map of matches and store it via key-value pairs 
         const conversions = await requestConversions(matchMap);
-        if (!conversions.size) return;
+        if (!conversions.size || !isEnabled || generation !== scanGeneration) return;
 
-        // get all eligible scanned time formats and add a badge that has the locally converted time
-        for (const [node, matches] of matchMap.entries()) {
-            // enriched = old time zone + new local time badge
-            // add existing match attribs and add convertedTime attrib
-            const enrichedMatches = matches
-                .map((match) => ({
-                    ...match,
-                    convertedTime: conversions.get(match.key) || null
-                }))
-                .filter((match) => match.convertedTime); // for only successful conversions
-
-            if (enrichedMatches.length) {
-                replaceNodeWithMatches(node, enrichedMatches); // add styling and replace node
+        // Recheck DOM structure too: unchanged text may have moved to another block.
+        const currentRuns = collectTextRuns(root);
+        handleMutations(observer?.takeRecords() || []);
+        observer?.disconnect();
+        try {
+            for (const [run, matches] of matchMap) {
+                const unchanged = currentRuns.some((current) => current.text === run.text &&
+                    current.parts.length === run.parts.length && current.parts.every((part, index) =>
+                        part.node === run.parts[index].node && part.node.isConnected));
+                if (!unchanged) continue;
+                for (const part of run.parts) {
+                    const pieces = matches.filter((match) => conversions.get(match.key) &&
+                        match.start < part.start + part.text.length && match.end > part.start)
+                        .map((match) => {
+                            const start = Math.max(0, match.start - part.start);
+                            const end = Math.min(part.text.length, match.end - part.start);
+                            return { start, end, matchText: part.text.slice(start, end),
+                                convertedTime: match.end <= part.start + part.text.length ? conversions.get(match.key) : null };
+                        });
+                    if (pieces.length) replaceNodeWithMatches(part.node, pieces);
+                }
             }
+        } finally {
+            observer?.observe(document.body, { childList: true, subtree: true, characterData: true });
         }
 
-        initObserver(); // adds mutation observer
     }
 
     /**
      * clear all nodes that were scanned and appended to the DOM
      */
     function clearProcessedNodes() {
+        handleMutations(observer?.takeRecords() || []);
+        observer?.disconnect();
+        const parents = new Set();
         document.querySelectorAll(".tz-highlight[data-tz-processed='true']").forEach((node) => {
+            parents.add(node.parentNode);
             const originalText = node.getAttribute("data-original-text") || "";
             node.replaceWith(document.createTextNode(originalText));
         });
+        parents.forEach((parent) => parent?.normalize());
+        observer?.observe(document.body, { childList: true, subtree: true, characterData: true });
     }
 
     /**
@@ -560,22 +552,28 @@
     }
 
     /**
-     * schedule a debounced page scan for a given root node
+     * schedule a debounced page scan covering all changes in the batch
      * used to rescan dynamically updated content without doing it on every update
-     * @param {Node} root the root to be scanned from the DOM
      * @returns {void}
      */
     function scheduleScan(root = document.body) {
         if (!isEnabled) return;
-
-        if (scanTimer) {
-            clearTimeout(scanTimer);
+        if (root?.nodeType === Node.TEXT_NODE) root = root.parentElement;
+        while (root && root !== document.body && isInline(root)) root = root.parentElement;
+        if (!root?.isConnected) return;
+        for (const pending of pendingRoots) {
+            if (pending.contains(root)) return;
+            if (root.contains(pending)) pendingRoots.delete(pending);
         }
+        pendingRoots.add(root);
+        if (scanTimer) return;
 
         // sets a debounce timer to limit to reduce scans
         scanTimer = window.setTimeout(() => {
             scanTimer = null;
-            void scanPage(root);
+            const roots = [...pendingRoots];
+            pendingRoots.clear();
+            for (const pending of roots) if (pending.isConnected) void scanPage(pending);
         }, 150);
     }
 
@@ -586,37 +584,29 @@
     function initObserver() {
         if (observer || !document.body) return;
 
-        observer = new MutationObserver((mutations) => {
-            if (!isEnabled) return;
+        observer = new MutationObserver(handleMutations);
 
-            // loop through every DOM change in the callback batch
-            for (const mutation of mutations) {
-                // structural DOM change (new nodes added (e.g., <div>, <p>, element nodes))
-                if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-                    scheduleScan(mutation.target);
-                    return;
-                }
+        observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    }
 
-                // text node changes (e.g., 10am to 10pm), edits to text
-                if (mutation.type === "characterData") {
-                    scheduleScan(mutation.target.parentNode || document.body);
-                    return;
-                }
+    function handleMutations(mutations) {
+        if (!isEnabled) return;
+        for (const mutation of mutations) {
+            const parent = mutation.target.nodeType === Node.TEXT_NODE
+                ? mutation.target.parentElement
+                : mutation.target;
+            if (parent?.closest?.("[data-tz-processed='true']")) continue;
+            if (mutation.type === "childList" || mutation.type === "characterData") {
+                scheduleScan(mutation.target);
             }
-        });
-
-        // watch list
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-            characterData: true
-        });
+        }
     }
 
     /**
      * clears and removes the highlight styles from the DOM and disconnects the mutation observer
      */
     function clearHighlights() {
+        pendingRoots.clear();
         if (scanTimer) {
             clearTimeout(scanTimer);
             scanTimer = null;
@@ -633,12 +623,12 @@
      * 3. Build regex from timezone keys.
      * 4. Receive enabled state.
      * 5. Start scan.
-     * 6. Traverse DOM with TreeWalker.
-     * 7. Collect eligible text nodes only.
+     * 6. Traverse DOM, respecting block and excluded-subtree boundaries.
+     * 7. Collect eligible runs of inline text and their original text nodes.
      * 9. Extract named groups from each regex hit.
      * 10. Filter false positives.
      * 11. Validate timezone and time structure.
-     * 12. Group matches by original text node.
+     * 12. Group matches by text run.
      * 15. Merge converted results back into matches.
      * 16. Replace original text nodes with fragments containing highlighted spans.
      * 17. Observe DOM mutations and rescan new content.
@@ -651,6 +641,9 @@
         }
 
         switch (message.type) {
+            case "TIME_EXTENSION_GET_STATUS":
+                sendResponse?.({ enabled: isEnabled, error: conversionError });
+                return;
             // setup and build the time zone offset dictionary and scan again if it was already scanned previously
             // happens when syncing/updating a page
             case "TIME_EXTENSION_SET_OFFSETS":
@@ -659,7 +652,19 @@
                     return;
                 }
 
+                const nextKey = JSON.stringify([
+                    Object.entries(message.offsets).sort(([a], [b]) => a.localeCompare(b)),
+                    message.localTimezone?.zoneName || null,
+                    message.localTimezone?.gmtOffset ?? null
+                ]);
+                if (nextKey === settingsKey) {
+                    sendResponse?.({ success: true });
+                    return;
+                }
+                settingsKey = nextKey;
+                conversionError = null;
                 timezoneOffsets = message.offsets;
+                scanGeneration++;
                 matchRegex = buildMatchRegex();
 
                 if (isEnabled) {
@@ -678,7 +683,13 @@
                     return;
                 }
 
+                if (isEnabled === message.enabled) {
+                    sendResponse?.({ success: true });
+                    return;
+                }
                 isEnabled = message.enabled;
+                conversionError = null;
+                scanGeneration++;
 
                 if (!isEnabled) {
                     clearHighlights();

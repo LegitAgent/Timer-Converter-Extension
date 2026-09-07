@@ -255,6 +255,10 @@ export function setupThemeToggle() {
  */
 export function setupExtensionToggle() {
     if (!DOM.extensionToggle) return;
+    void refreshScannerStatus();
+    chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === "local" && (changes.timezone_now || changes.popupState)) void refreshScannerStatus();
+    });
 
     DOM.extensionToggle.addEventListener("change", async () => {
         const enabled = DOM.extensionToggle.checked;
@@ -317,7 +321,8 @@ export function setupExtensionToggle() {
             // the content script is declared in manifest.json and loaded by Chrome.
             await chrome.tabs.sendMessage(tab.id, {
                 type: "TIME_EXTENSION_SET_OFFSETS",
-                offsets: timezoneOffsets
+                offsets: timezoneOffsets,
+                localTimezone: timezone_now || null
             });
 
             // send extension toggle
@@ -336,4 +341,32 @@ export function setupExtensionToggle() {
             console.error("Immediate popup sync failed:", error);
         }
     });
+}
+
+// Read current storage and the active page rather than caching transient errors.
+let statusRequest = 0;
+export async function refreshScannerStatus() {
+    const request = ++statusRequest;
+    let error = "";
+    try {
+        const { timezone_now } = await storageLocal.get("timezone_now");
+        if (!timezone_now) {
+            error = "Get your time zone from the Paste & Convert tab before enabling automatic detection.";
+        } else if (DOM.extensionToggle?.checked) {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tab?.id && /^(https?|file):/.test(tab.url || "")) {
+                try {
+                    const status = await chrome.tabs.sendMessage(tab.id, { type: "TIME_EXTENSION_GET_STATUS" });
+                    error = status?.error || "";
+                } catch {
+                    error = "Refresh this page to connect the scanner.";
+                }
+            }
+        }
+    } catch {
+        error = "Unable to read scanner status. Reopen the extension and try again.";
+    }
+    if (request !== statusRequest || !DOM.toggleErrorText) return;
+    DOM.toggleErrorText.textContent = error;
+    DOM.toggleErrorText.classList.toggle("hidden", !error);
 }
