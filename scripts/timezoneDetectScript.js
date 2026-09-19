@@ -36,7 +36,7 @@
      * @returns {string} a safe string that can be parsed into a regex
      */
     function escapeRegex(str) {
-        return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        return str.replace(/[.*+?^${}()|[\]\\\n]/g, "\\$&");
     }
 
     /**
@@ -131,7 +131,7 @@
         //         match must not be immediately followed by a letter, digit, or underscore
         // e.g., abcd10AMPST (*)abcd is invalid since it is stuck between a word, it must be a word in itself
         return new RegExp(
-            String.raw`(?<![A-Za-z0-9_:])(?<full>(?<time>${TIME_PATTERN})\s*(?<ampm>${AMPM_PATTERN})?\s*(?<tz>${timezonePattern}))(?![A-Za-z0-9_]|[+-]\d|:\d)`,
+            String.raw`(?<![A-Za-z0-9_:])(?<full>(?<time>${TIME_PATTERN})[^\S\r\n]*(?<ampm>${AMPM_PATTERN})?[^\S\r\n]*(?<tz>${timezonePattern}))(?![A-Za-z0-9_]|[+-]\d|:\d)`,
             "gi"
         );
     }
