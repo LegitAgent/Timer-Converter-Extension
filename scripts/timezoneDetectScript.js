@@ -5,8 +5,9 @@
 
     const STYLE_ID = "time-extension-inline-style";
     const SKIP_SELECTOR = "input, textarea, select, script, style, noscript, svg, math, [contenteditable]:not([contenteditable='false'])";
-    const TIME_PATTERN = String.raw`\d{1,2}(?::\d{2})?`;
     const AMPM_PATTERN = String.raw`(?:A\.?M\.?|P\.?M\.?)`;
+    // Bare hours require AM/PM; times with minutes may use the 24-hour format.
+    const TIME_PATTERN = String.raw`\d{1,2}(?::\d{2}|(?=[^\S\r\n]*${AMPM_PATTERN}))`;
     const CASE_SENSITIVE_TIMEZONES = new Set([
         "AT",
         "ACT",
