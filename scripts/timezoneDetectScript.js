@@ -1,5 +1,6 @@
 // (() => means: make an anonymous function and execute it immediately.
 (() => {
+    if (typeof chrome === "undefined" || !chrome.runtime?.onMessage) return;
     if (window.__timeExtensionScannerLoaded) return; // check if this script has been loaded for this tab
     window.__timeExtensionScannerLoaded = true;
 
@@ -367,11 +368,19 @@
         node.parentNode?.replaceChild(fragment, node);
     }
 
+    function isElement(node) {
+        // get the elem from the nodes document window
+        const ElementClass = node?.ownerDocument?.defaultView?.Element;
+        return typeof ElementClass === "function" && node instanceof ElementClass; // exists and node is an element
+    }
+
     function isInline(element) {
+        if (!isElement(element)) return false;
         return ["inline", "contents"].includes(window.getComputedStyle(element).display);
     }
 
     function isExcluded(element) {
+        if (!isElement(element)) return true;
         const style = window.getComputedStyle(element);
         return element.matches(SKIP_SELECTOR + ", [data-tz-processed='true']") ||
             style.display === "none" || ["hidden", "collapse"].includes(style.visibility);
@@ -380,6 +389,7 @@
     // Preserve whitespace and offsets across inline formatting, but never join
     // separate blocks or bridge excluded/hidden content.
     function collectTextRuns(root) {
+        if (!isElement(root) || !root.isConnected) return [];
         // A queued subtree may sit inside a hidden or editable ancestor.
         for (let parent = root.parentElement; parent; parent = parent.parentElement) {
             if (isExcluded(parent)) return [];
@@ -413,6 +423,21 @@
         return runs;
     }
 
+    function hasExtensionRuntime() {
+        // chrome API must exist, runtime has an extension ID, and the messaging func exists
+        return typeof chrome !== "undefined" && Boolean(chrome.runtime?.id) &&
+            typeof chrome.runtime?.sendMessage === "function";
+    }
+
+    // Reloading/updating the extension leaves old content scripts in open tabs.
+    // Stop their observers and timers until the page loads a fresh script.
+    function stopInvalidatedScanner() {
+        conversionError = "Unable to reach the extension. Refresh this page and try again.";
+        isEnabled = false;
+        scanGeneration++;
+        clearHighlights();
+    }
+
     /**
      * deduplicates detected matches and requests converted times from the background script
      * @param {Map<Object, Array>} matchMap matches grouped by inline text run
@@ -438,6 +463,10 @@
         }
 
         if (!uniqueItems.length) return new Map();
+        if (!hasExtensionRuntime()) {
+            stopInvalidatedScanner();
+            return new Map();
+        }
 
         try {
             const response = await chrome.runtime.sendMessage({
@@ -461,6 +490,10 @@
             return results;
         } catch (error) {
             if (generation !== scanGeneration || !isEnabled) return new Map();
+            if (!hasExtensionRuntime() || /extension context invalidated/i.test(error?.message || "")) {
+                stopInvalidatedScanner();
+                return new Map();
+            }
             conversionError = "Unable to reach the extension. Refresh this page and try again.";
             console.error("Failed to convert detected times.", error);
             return new Map();
@@ -475,6 +508,11 @@
      */
     async function scanPage(root = document.body) {
         if (!isEnabled || !document.body || !matchRegex) return;
+        if (!hasExtensionRuntime()) {
+            stopInvalidatedScanner();
+            return;
+        }
+        if (!isElement(root) || !root.isConnected) return;
 
         injectStyles();
         // Observe even when this page has no matches yet or conversion fails.
@@ -560,8 +598,9 @@
     function scheduleScan(root = document.body) {
         if (!isEnabled) return;
         if (root?.nodeType === Node.TEXT_NODE) root = root.parentElement;
+        if (!isElement(root)) return;
         while (root && root !== document.body && isInline(root)) root = root.parentElement;
-        if (!root?.isConnected) return;
+        if (!isElement(root) || !root.isConnected) return;
         for (const pending of pendingRoots) {
             if (pending.contains(root)) return;
             if (root.contains(pending)) pendingRoots.delete(pending);
